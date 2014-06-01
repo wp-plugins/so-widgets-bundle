@@ -1,0 +1,24 @@
+@font-face{
+font-family:'sow-fontawesome';
+src:url('font/fontawesome-webfont.eot?map0iz');
+src:url('font/fontawesome-webfont.eot?#iefixmap0iz') format('embedded-opentype'), url('font/fontawesome-webfont.woff?map0iz') format('woff'), url('font/fontawesome-webfont.ttf?map0iz') format('truetype');
+font-weight:normal;
+font-style:normal;
+}
+.sow-icon-fontawesome {
+	display: inline-block;
+	font-family: 'sow-fontawesome';
+	font-style: normal;
+	font-variant: normal;
+	font-weight: normal;
+	line-height: 1;
+	speak: none;
+	text-transform: none;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+.sow-icon-fontawesome[data-sow-icon]:before {
+	content: attr(data-sow-icon);
+}
+

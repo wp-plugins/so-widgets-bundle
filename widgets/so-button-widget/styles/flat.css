@@ -1,0 +1,39 @@
+.ow-button-base {
+	zoom: 1;
+}
+
+.ow-button-base:before {
+	content: '';
+	display: block;
+}
+
+.ow-button-base:after {
+	clear: both;
+	content: '';
+	display: table;
+}
+
+.ow-button-base a {
+	background: #41a9d5;
+	border-bottom: 2px solid #247fa5;
+	-webkit-border-radius: 0.25em;
+	-moz-border-radius: 0.25em;
+	border-radius: 0.25em;
+	color: #ffffff !important;
+	font-size: 1em;
+	padding: 1em 2em;
+	text-shadow: 0 1px 0 rgba(0, 0, 0, 0.05);
+}
+
+.ow-button-base a:visited,
+.ow-button-base a:active,
+.ow-button-base a:hover {
+	color: #ffffff !important;
+}
+
+.ow-button-base a.ow-button-hover:hover {
+	background: #52b1d9;
+	border-bottom-color: #288cb6;
+	color: #ffffff;
+}
+

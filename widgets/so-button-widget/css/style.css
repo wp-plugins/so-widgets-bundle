@@ -1,0 +1,55 @@
+.ow-button-base {
+	zoom: 1; /* All the special styles */ 
+}
+
+.ow-button-base:before {
+	content: '';
+	display: block;
+}
+
+.ow-button-base:after {
+	clear: both;
+	content: '';
+	display: table;
+}
+
+.ow-button-base a {
+	display: inline-block;
+	line-height: 1em;
+	text-align: center;
+	text-decoration: none;
+}
+
+.ow-button-base a .sow-icon-image,
+.ow-button-base a [class^="sow-icon-"] {
+	width: auto;
+	height: 1em;
+	
+	display: block;
+	float: left;
+	font-size: 1.3em;
+	margin: -0.1em 0.75em -0.2em -0.75em;
+}
+
+.ow-button-base a .sow-icon-image {
+	width: 1em;
+	
+	background-size: cover;
+}
+
+.ow-button-base.ow-button-align-left {
+	text-align: left;
+}
+
+.ow-button-base.ow-button-align-right {
+	text-align: right;
+}
+
+.ow-button-base.ow-button-align-center {
+	text-align: center;
+}
+
+.ow-button-base.ow-button-align-justify a {
+	display: block;
+}
+
