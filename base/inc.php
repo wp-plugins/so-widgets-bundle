@@ -118,7 +118,6 @@ function siteorigin_widget_get_icon_list(){
 add_action('wp_ajax_siteorigin_widgets_get_icons', 'siteorigin_widget_get_icon_list');
 
 function siteorigin_widget_get_icon($icon_value, $icon_styles = false) {
-
 	if( empty( $icon_value ) ) return false;
 	list( $family, $icon ) = explode('-', $icon_value, 2);
 	if( empty( $family ) || empty( $icon ) ) return false;
@@ -138,3 +137,41 @@ function siteorigin_widget_get_icon($icon_value, $icon_styles = false) {
 	}
 
 }
+
+function siteorigin_widget_preview_widget_action(){
+	if(!class_exists($_POST['class'])) exit();
+	$widget = new $_POST['class'];
+	if(!is_a($widget, 'SiteOrigin_Widget')) exit();
+
+	$instance = json_decode( stripslashes_deep($_POST['data']), true);
+	$instance['is_preview'] = true;
+
+	// The theme stylesheet will change how the button looks
+	wp_enqueue_style( 'theme-css', get_stylesheet_uri(), array(), rand(0,65536) );
+	wp_enqueue_style( 'so-widget-preview', plugin_dir_url(__FILE__).'/css/preview.css', array(), rand(0,65536) );
+
+	$widget->widget(array(
+		'before_widget' => '',
+		'after_widget' => '',
+		'before_title' => '',
+		'after_title' => '',
+	), $instance);
+
+	// Print all the scripts and styles
+	wp_print_scripts();
+	wp_print_styles();
+	siteorigin_widget_print_styles();
+
+	?>
+	<script type="text/javascript">
+		if( typeof jQuery != 'undefined' ) {
+			// So that the widget still has access to the document ready event.
+			jQuery(document).ready();
+		}
+	</script>
+	<?php
+
+
+	exit();
+}
+add_action('wp_ajax_so_widgets_preview', 'siteorigin_widget_preview_widget_action');

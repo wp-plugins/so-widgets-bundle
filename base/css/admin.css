@@ -349,6 +349,25 @@
 	padding: 10px;
 }
 
+.siteorigin-widget-form .siteorigin-widget-field-type-widget > label:before,
+.siteorigin-widget-form .siteorigin-widget-field-type-section > label:before {
+	width: 14px;
+	height: 14px;
+	
+	content: "\f132";
+	display: block;
+	float: left;
+	font-family: "dashicons";
+	font-size: 14px;
+	line-height: 1;
+	margin: 3px 6px 0 0;
+}
+
+.siteorigin-widget-form .siteorigin-widget-field-type-widget > label.siteorigin-widget-section-visible:before,
+.siteorigin-widget-form .siteorigin-widget-field-type-section > label.siteorigin-widget-section-visible:before {
+	content: "\f460";
+}
+
 .siteorigin-widget-form .siteorigin-widget-field-type-widget .siteorigin-widget-section,
 .siteorigin-widget-form .siteorigin-widget-field-type-section .siteorigin-widget-section {
 	background: #FCFCFC;
@@ -443,7 +462,7 @@
 	width: 19px;
 	height: 19px;
 	
-	background: url(./img/ordering-icons.png);
+	background: url(img/ordering-icons.png);
 	cursor: pointer;
 	display: inline-block;
 	margin: 0 0 -6px 10px;
@@ -507,7 +526,7 @@
 }
 
 .siteorigin-widgets-query-builder .sow-post-selector-summary.sow-post-loading .sow-thumbnail {
-	background: url(./img/loading.gif) center center no-repeat #eeeeee;
+	background: url(img/loading.gif) center center no-repeat #eeeeee;
 }
 
 .siteorigin-widgets-query-builder .sow-post-selector-summary.sow-post-loading .sow-thumbnail img {
@@ -583,5 +602,64 @@
 .siteorigin-widget-help-link {
 	display: block;
 	margin: 1em 0;
+}
+
+.siteorigin-widgets-preview-modal-overlay {
+	position: fixed;
+	top: 32px;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	
+	background: rgba(0, 0, 0, 0.7);
+	z-index: 99999;
+}
+
+.siteorigin-widgets-preview-modal {
+	position: fixed;
+	top: 64px;
+	right: 32px;
+	bottom: 32px;
+	left: 32px;
+	
+	background-color: #ffffff;
+	z-index: 100000;
+}
+
+.siteorigin-widgets-preview-modal .siteorigin-widgets-preview-close {
+	position: absolute;
+	top: 0px;
+	right: 0px;
+	width: 40px;
+	height: 40px;
+	
+	background: #666666;
+	-ms-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+	box-sizing: border-box;
+	color: #ffffff;
+	cursor: pointer;
+	font-size: 32px;
+	line-height: 1em;
+	padding: 4px;
+	text-align: center;
+	z-index: 10;
+}
+
+.siteorigin-widgets-preview-modal .siteorigin-widgets-preview-close:hover {
+	background: #FF404B;
+	color: #ffffff;
+}
+
+.siteorigin-widgets-preview-modal .siteorigin-widgets-preview-iframe {
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	
 }
 

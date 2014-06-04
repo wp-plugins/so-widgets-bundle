@@ -37,11 +37,11 @@
 	
 	background: #F2F2F2;
 	border: 1px solid #D9D9D9;
-	-webkit-box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-	-moz-box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+	-webkit-box-shadow: 0 1px 2px rgba(0,0,0,0.05); /* The Switch - © 2013 Thibaut Courouble - MIT License */ 
+	-moz-box-shadow: 0 1px 2px rgba(0,0,0,0.05); /* The Switch - © 2013 Thibaut Courouble - MIT License */ 
 	box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 	float: left;
-	overflow: hidden;
+	overflow: hidden; /* The Switch - © 2013 Thibaut Courouble - MIT License */ 
 	padding: 0;
 }
 
@@ -88,34 +88,155 @@
 	color: #777777;
 	line-height: 1.35em;
 	margin-bottom: 0;
-	overflow: hidden;
 }
 
-#siteorigin-widgets-bundle .so-widget .so-widget-action-link {
-	background: #666666;
-	-webkit-border-radius: 2px;
-	-moz-border-radius: 2px;
-	border-radius: 2px;
-	color: #FFFFFF;
+#siteorigin-widgets-bundle .so-widget img,
+#siteorigin-widgets-bundle .so-widget,
+#siteorigin-widgets-bundle .so-widget .so-widget-text,
+#siteorigin-widgets-bundle .so-widget .so-widget-text h4,
+#siteorigin-widgets-bundle .so-widget .so-widget-text p {
+	-webkit-transition: all 0.5s ease;
+	-moz-transition: all 0.5s ease;
+	-o-transition: all 0.5s ease;
+	transition: all 0.5s ease;
+}
+
+#siteorigin-widgets-bundle .so-widget .switch {
+	position: relative;
+	width: 56px;
+	height: 20px;
+	
+	background-color: white;
+	background-image: -webkit-linear-gradient(top, #eeeeee, #ffffff 25px);
+	background-image: -moz-linear-gradient(top, #eeeeee, #ffffff 25px);
+	background-image: -o-linear-gradient(top, #eeeeee, #ffffff 25px);
+	background-image: linear-gradient(to bottom, #eeeeee, #ffffff 25px);
+	border-radius: 18px;
+	box-shadow: inset 0 -1px #ffffff, inset 0 1px 1px rgba(0, 0, 0, 0.05);
+	cursor: pointer;
 	display: inline-block;
 	float: right;
-	font-size: 11px;
-	margin-top: -4px;
-	opacity: 0.8;
-	padding: 3px 6px;
-	text-decoration: none;
+	padding: 3px;
+	vertical-align: top;
 }
 
-#siteorigin-widgets-bundle .so-widget .so-widget-action-link:hover {
+#siteorigin-widgets-bundle .so-widget .switch .switch-input {
+	position: absolute;
+	top: 0;
+	left: 0;
+	
+	opacity: 0;
+}
+
+#siteorigin-widgets-bundle .so-widget .switch .switch-label {
+	position: relative;
+	height: inherit;
+	
+	background: #eceeef;
+	border-radius: inherit;
+	box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.12), inset 0 0 2px rgba(0, 0, 0, 0.15);
+	display: block;
+	font-size: 10px;
+	text-transform: uppercase;
+	-webkit-transition: 0.15s ease-out;
+	-moz-transition: 0.15s ease-out;
+	-o-transition: 0.15s ease-out;
+	transition: 0.15s ease-out;
+	-webkit-transition-property: opacity background;
+	-moz-transition-property: opacity background;
+	-o-transition-property: opacity background;
+	transition-property: opacity background;
+}
+
+#siteorigin-widgets-bundle .so-widget .switch .switch-label:before,
+#siteorigin-widgets-bundle .so-widget .switch .switch-label:after {
+	position: absolute;
+	top: 50%;
+	
+	line-height: 1;
+	margin-top: -0.5em;
+	-webkit-transition: inherit;
+	-moz-transition: inherit;
+	-o-transition: inherit;
+	transition: inherit;
+}
+
+#siteorigin-widgets-bundle .so-widget .switch .switch-label:before {
+	right: 11px;
+	
+	color: #aaa;
+	content: attr(data-off);
+	text-shadow: 0 1px rgba(255, 255, 255, 0.5);
+}
+
+#siteorigin-widgets-bundle .so-widget .switch .switch-label:after {
+	left: 11px;
+	
+	color: white;
+	content: attr(data-on);
+	opacity: 0;
+	text-shadow: 0 1px rgba(0, 0, 0, 0.2);
+}
+
+#siteorigin-widgets-bundle .so-widget .switch .switch-input:checked ~ .switch-label {
+	background: #47a8d8;
+	box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.15), inset 0 0 3px rgba(0, 0, 0, 0.2);
+}
+
+#siteorigin-widgets-bundle .so-widget .switch .switch-input:checked ~ .switch-label:before {
+	opacity: 0;
+}
+
+#siteorigin-widgets-bundle .so-widget .switch .switch-input:checked ~ .switch-label:after {
 	opacity: 1;
 }
 
-#siteorigin-widgets-bundle .so-widget .so-widget-action-link.so-widget-action-deactivate {
-	background: #d54e21;
+#siteorigin-widgets-bundle .so-widget .switch .switch-handle {
+	position: absolute;
+	top: 4px;
+	left: 4px;
+	width: 18px;
+	height: 18px;
+	
+	background: white;
+	background-image: -webkit-linear-gradient(top, #ffffff 40%, #f0f0f0);
+	background-image: -moz-linear-gradient(top, #ffffff 40%, #f0f0f0);
+	background-image: -o-linear-gradient(top, #ffffff 40%, #f0f0f0);
+	background-image: linear-gradient(to bottom, #ffffff 40%, #f0f0f0);
+	border-radius: 10px;
+	box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);
+	-webkit-transition: left 0.15s ease-out;
+	-moz-transition: left 0.15s ease-out;
+	-o-transition: left 0.15s ease-out;
+	transition: left 0.15s ease-out;
 }
 
-#siteorigin-widgets-bundle .so-widget .so-widget-action-link.so-widget-action-activate {
-	background: #0074a2;
+#siteorigin-widgets-bundle .so-widget .switch .switch-handle:before {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 12px;
+	height: 12px;
+	
+	background: #f9f9f9;
+	background-image: -webkit-linear-gradient(top, #eeeeee, #ffffff);
+	background-image: -moz-linear-gradient(top, #eeeeee, #ffffff);
+	background-image: -o-linear-gradient(top, #eeeeee, #ffffff);
+	background-image: linear-gradient(to bottom, #eeeeee, #ffffff);
+	border-radius: 6px;
+	box-shadow: inset 0 1px rgba(0, 0, 0, 0.02);
+	content: '';
+	margin: -6px 0 0 -6px;
+}
+
+#siteorigin-widgets-bundle .so-widget .switch .switch-input:checked ~ .switch-handle {
+	left: 40px;
+	
+	box-shadow: -1px 1px 5px rgba(0, 0, 0, 0.2);
+}
+
+#siteorigin-widgets-bundle .so-widget .switch .switch-green > .switch-input:checked ~ .switch-label {
+	background: #4fb845;
 }
 
 #siteorigin-widgets-bundle .so-widget.so-widget-is-active {

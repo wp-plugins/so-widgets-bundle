@@ -112,7 +112,9 @@ class SiteOrigin_Widgets_Loader {
 	 */
 	function load_register(){
 		siteorigin_widget_register_self($this->widget_id, $this->file);
-		require_once $this->load_file;
+		if( !class_exists( $this->get_class_name() ) ) {
+			require_once $this->load_file;
+		}
 	}
 
 	/**

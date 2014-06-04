@@ -8,6 +8,9 @@
             if( $el.is('.siteorigin-widget-form-main') ) {
                 if( $el.data('sow-form-setup') == true ) return true;
                 if( $('body').hasClass('widgets-php') && !$el.is(':visible') ) return true;
+
+                // Lets set up the preview
+                $el.sowSetupPreview();
             }
 
             // Find any field or sub widget fields.
@@ -138,6 +141,8 @@
 
             // Handle toggling of the sub widget form
             $fields.filter('.siteorigin-widget-field-type-widget, .siteorigin-widget-field-type-section').find('> label').click(function(){
+                var $$ = $(this);
+                $(this).toggleClass( 'siteorigin-widget-section-visible' );
                 $(this).siblings('.siteorigin-widget-section').slideToggle(function(){
 
                     // Center the PB dialog
@@ -236,6 +241,71 @@
              *******/
         } );
     };
+
+    $.fn.sowSetupPreview = function(){
+        var $el = $(this);
+        var previewButton = $el.siblings('.siteorigin-widget-preview');
+
+        previewButton.find('> a').click(function(e){
+            e.preventDefault();
+            var data = {};
+
+            $el.find( '*[name]' ).each( function () {
+                var $$ = $(this);
+                var name = /[a-zA-Z\-]+\[[0-9]+\]\[(.*)\]/.exec( $$.attr('name') );
+
+                name = name[1];
+                parts = name.split('][');
+
+                // Make sure we either have numbers or strings
+                parts = parts.map(function(e){
+                    if( !isNaN(parseFloat(e)) && isFinite(e) ) return parseInt(e);
+                    else return e;
+                });
+
+                var sub = data;
+                for(var i = 0; i < parts.length; i++) {
+                    if(i == parts.length - 1) {
+                        // This is the end, so we need to store the actual field value here
+                        if( $$.attr('type') == 'checkbox' ){
+                            if ( $$.is(':checked') ) sub[ parts[i] ] = $$.val() != '' ? $$.val() : true;
+                        }
+                        else sub[ parts[i] ] = $$.val();
+                    }
+                    else {
+                        if(typeof sub[parts[i]] == 'undefined') {
+                            sub[parts[i]] = {};
+                        }
+                        // Go deeper into the data and continue
+                        sub = sub[parts[i]];
+                    }
+                }
+            } );
+
+            // Create the modal
+            var overlay = $('<div class="siteorigin-widgets-preview-modal-overlay"></div>').appendTo('body');
+            var modal = $('<div class="siteorigin-widgets-preview-modal"></div>').appendTo('body');
+            var close = $('<div class="siteorigin-widgets-preview-close dashicons dashicons-no"></div>').appendTo(modal);
+            var iframe = $('<iframe class="siteorigin-widgets-preview-iframe" scrolling="no"></iframe>').appendTo(modal);
+
+            $.post(
+                ajaxurl,
+                {
+                    'action' : 'so_widgets_preview',
+                    'data' : JSON.stringify(data),
+                    'class' : $el.data('class')
+                },
+                function(html) {
+                    iframe.contents().find('body').html( html );
+                }
+            );
+
+            close.add(overlay).click(function(){
+                overlay.remove();
+                modal.remove();
+            });
+        });
+    }
 
     $.fn.sowSetupRepeater = function(){
 
