@@ -32,6 +32,10 @@ font-style:normal;
 	text-align: center;
 }
 
+.sow-features-list .sow-features-feature .sow-icon-container {
+	text-decoration: none;
+}
+
 .sow-features-list .sow-features-feature .sow-icon-container [class^="sow-icon-"],
 .sow-features-list .sow-features-feature .sow-icon-container .sow-icon-image {
 	position: absolute;
@@ -46,6 +50,7 @@ font-style:normal;
 	margin-left: -0.5em;
 	margin-top: -0.5em;
 	text-align: center;
+	text-decoration: none;
 }
 
 .sow-features-list .sow-features-feature h5 {
