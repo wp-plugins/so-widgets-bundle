@@ -1,38 +1,32 @@
 .ow-button-base {
-	zoom: 1;
+  zoom: 1;
 }
-
 .ow-button-base:before {
-	content: '';
-	display: block;
+  content: '';
+  display: block;
 }
-
 .ow-button-base:after {
-	clear: both;
-	content: '';
-	display: table;
+  content: '';
+  display: table;
+  clear: both;
 }
-
 .ow-button-base a {
-	background: transparent;
-	border: 2px solid #41a9d5;
-	-webkit-border-radius: 0.25em;
-	-moz-border-radius: 0.25em;
-	border-radius: 0.25em;
-	color: #41a9d5 !important;
-	font-size: 1em;
-	padding: 1em 2em;
-	text-shadow: 0 1px 0 rgba(0, 0, 0, 0.05);
+  font-size: 1em;
+  padding: 1em 2em;
+  background: transparent;
+  border: 2px solid #41a9d5;
+  color: #41a9d5 !important;
+  -webkit-border-radius: 0.25em;
+  -moz-border-radius: 0.25em;
+  border-radius: 0.25em;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.05);
 }
-
 .ow-button-base a:visited,
 .ow-button-base a:active,
 .ow-button-base a:hover {
-	color: #41a9d5 !important;
+  color: #41a9d5 !important;
 }
-
 .ow-button-base a.ow-button-hover:hover {
-	background: #41a9d5;
-	color: #ffffff !important;
+  background: #41a9d5;
+  color: #ffffff !important;
 }
-

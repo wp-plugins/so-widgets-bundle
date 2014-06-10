@@ -3,7 +3,7 @@
 /*
 Plugin Name: SiteOrigin Widgets Bundle
 Description: A collection of all our widgets, neatly bundled into a single plugin.
-Version: 1.0.3
+Version: trunk
 Author: Greg Priday
 Author URI: http://siteorigin.com
 Plugin URI: http://siteorigin.com/widgets-bundle/
@@ -11,7 +11,7 @@ License: GPL3
 License URI: https://www.gnu.org/licenses/gpl-3.0.txt
 */
 
-define('SOW_BUNDLE_VERSION', '1.0.3');
+define('SOW_BUNDLE_VERSION', 'trunk');
 
 // Include the icons if they exist and we haven't already
 if( !defined('SITEORIGIN_WIDGETS_ICONS') && file_exists( plugin_dir_path(__FILE__).'/icons/icons.php' ) ) include plugin_dir_path(__FILE__).'/icons/icons.php';
@@ -269,11 +269,21 @@ class SiteOrigin_Widgets_Bundle {
 	function get_widgets_list(){
 		$active = get_option('siteorigin_widgets_active', array());
 
+		$default_headers = array(
+			'Name' => 'Widget Name',
+			'Description' => 'Description',
+			'Author' => 'Author',
+			'AuthorURI' => 'Author URI',
+			'WidgetURI' => 'Widget URI',
+			'VideoURI' => 'Video URI',
+		);
+
 		$widgets = array();
 		foreach($this->widget_folders as $folder) {
 
-			$folder = str_replace(WP_PLUGIN_DIR, '', $folder);
-			foreach( get_plugins( $folder ) as $file => $widget ) {
+			$files = glob( $folder.'*/*.php' );
+			foreach($files as $file) {
+				$widget = get_file_data( $file, $default_headers, 'siteorigin-widget' );
 				$f = pathinfo($file);
 				$id = $f['filename'];
 
@@ -286,8 +296,7 @@ class SiteOrigin_Widgets_Bundle {
 		}
 
 		// Sort the widgets alphabetically
-		uasort($widgets, array($this, 'widget_uasort'));
-
+		uasort( $widgets, array($this, 'widget_uasort') );
 		return $widgets;
 	}
 
