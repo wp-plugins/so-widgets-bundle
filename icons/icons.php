@@ -1487,19 +1487,19 @@ function siteorigin_widgets_icon_families_filter( $families ){
 	$families['fontawesome'] = array(
 		'name' => __( 'Font Awesome', 'siteorigin-widgets' ),
 		'style_uri' => plugin_dir_url(__FILE__).'fontawesome/style.css',
-		'icons' => apply_filters('siteorigin_widgets_icons_fontawesome', array()),
+		'icons' => apply_filters('siteorigin_widgets_icons_fontawesome', array() ),
 	);
 
 	$families['icomoon'] = array(
 		'name' => __( 'Icomoon Free', 'siteorigin-widgets' ),
 		'style_uri' => plugin_dir_url(__FILE__).'icomoon/style.css',
-		'icons' => apply_filters('siteorigin_widgets_icons_icomoon', array()),
+		'icons' => apply_filters('siteorigin_widgets_icons_icomoon', array() ),
 	);
 
 	$families['genericons'] = array(
 		'name' => __( 'Genericons', 'siteorigin-widgets' ),
 		'style_uri' => plugin_dir_url(__FILE__).'genericons/style.css',
-		'icons' => apply_filters('siteorigin_widgets_icons_genericons', array()),
+		'icons' => apply_filters('siteorigin_widgets_icons_genericons', array() ),
 	);
 
 	$families['typicons'] = array(

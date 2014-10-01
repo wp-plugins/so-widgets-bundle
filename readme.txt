@@ -2,11 +2,13 @@
 Tags: bundle, widget, button, slider, image, carousel, price table
 Requires at least: 3.8
 Tested up to: 3.9.1
-Stable tag: 1.0.4
+Stable tag: 1.0.3
 License: GPLv3 or later
 Contributors: gpriday
 
 == Description ==
+
+[vimeo http://vimeo.com/102103379]
 
 Widgets are great. No matter where you’re using them. In a [Page Builder](http://siteorigin.com/page-builder/) page or on your widgetized areas.
 
@@ -33,6 +35,10 @@ Once you enable a widget, you'll be able to use it anywhere standard widgets are
 3. An example of the button widget.
 
 == Changelog ==
+
+= 1.0.5 =
+* Removed legacy widget deactivation functions.
+* Improved how widgets are loaded.
 
 = 1.0.4 =
 * Changed how widget list is loaded to fix issue with widgets list not displaying.
