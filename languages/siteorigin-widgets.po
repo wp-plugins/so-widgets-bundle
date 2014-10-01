@@ -1,14 +1,14 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: SiteOrigin Widgets Bundle\n"
-"POT-Creation-Date: 2014-10-01 16:00+0200\n"
-"PO-Revision-Date: 2014-10-01 16:01+0200\n"
+"POT-Creation-Date: 2014-10-01 21:55+0200\n"
+"PO-Revision-Date: 2014-10-01 21:55+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 1.6.7\n"
+"X-Generator: Poedit 1.6.9\n"
 "X-Poedit-Basepath: ..\n"
 "X-Poedit-SourceCharset: UTF-8\n"
 "X-Poedit-KeywordsList: __;_e;_n:1,2;_x:1,2c;_ex:1,2c;_nx:4c,1,2;esc_attr__;"
@@ -28,7 +28,7 @@ msgstr ""
 msgid "Post In"
 msgstr ""
 
-#: base/inc/post-selector.php:55 base/siteorigin-widget.class.php:225
+#: base/inc/post-selector.php:55 base/siteorigin-widget.class.php:223
 msgid "Select Posts"
 msgstr ""
 
@@ -103,6 +103,16 @@ msgstr ""
 msgid "Widget Preview"
 msgstr ""
 
+#: base/siteorigin-widget.class.php:167
+msgid ""
+"This widget has scripts and styles that need to be loaded before you can use "
+"it. Please save and reload your current page."
+msgstr ""
+
+#: base/siteorigin-widget.class.php:168
+msgid "You will only need to do this once."
+msgstr ""
+
 #: base/siteorigin-widget.class.php:171
 msgid "Preview"
 msgstr ""
@@ -111,47 +121,43 @@ msgstr ""
 msgid "Help"
 msgstr ""
 
-#: base/siteorigin-widget.class.php:186
-msgid "Please refresh this page to start using this widget."
-msgstr ""
-
-#: base/siteorigin-widget.class.php:208
+#: base/siteorigin-widget.class.php:206
 msgid "Are you sure?"
 msgstr ""
 
-#: base/siteorigin-widget.class.php:219
+#: base/siteorigin-widget.class.php:217
 #, php-format
 msgid ""
 "This query returns <a href=\"#\" class=\"preview-query-posts\">%s posts</a>."
 msgstr ""
 
-#: base/siteorigin-widget.class.php:510
+#: base/siteorigin-widget.class.php:509
 #, php-format
 msgid ""
 "You need to <a href=\"%s\">upgrade</a> to WordPress 3.5 to use media fields"
 msgstr ""
 
-#: base/siteorigin-widget.class.php:528
+#: base/siteorigin-widget.class.php:527
 msgid "Choose Media"
 msgstr ""
 
-#: base/siteorigin-widget.class.php:529
+#: base/siteorigin-widget.class.php:528
 msgid "Set Media"
 msgstr ""
 
-#: base/siteorigin-widget.class.php:544
+#: base/siteorigin-widget.class.php:543
 msgid "Remove"
 msgstr ""
 
-#: base/siteorigin-widget.class.php:557
+#: base/siteorigin-widget.class.php:556
 msgid "Build Posts Query"
 msgstr ""
 
-#: base/siteorigin-widget.class.php:612
+#: base/siteorigin-widget.class.php:611
 msgid "Add"
 msgstr ""
 
-#: base/siteorigin-widget.class.php:677
+#: base/siteorigin-widget.class.php:676
 msgid "Unknown Field"
 msgstr ""
 
@@ -175,28 +181,28 @@ msgstr ""
 msgid "Elegant Themes Line Icons"
 msgstr ""
 
-#: so-widgets-bundle.php:199 so-widgets-bundle.php:200 tpl/admin.php:2
+#: so-widgets-bundle.php:198 so-widgets-bundle.php:199 tpl/admin.php:2
 msgid "SiteOrigin Widgets"
 msgstr ""
 
-#: so-widgets-bundle.php:227
+#: so-widgets-bundle.php:226
 #, php-format
 msgid "%s was %s"
 msgstr ""
 
-#: so-widgets-bundle.php:229
+#: so-widgets-bundle.php:228
 msgid "Activated"
 msgstr ""
 
-#: so-widgets-bundle.php:229
+#: so-widgets-bundle.php:228
 msgid "Deactivated"
 msgstr ""
 
-#: so-widgets-bundle.php:406
+#: so-widgets-bundle.php:399
 msgid "Manage Widgets"
 msgstr ""
 
-#: so-widgets-bundle.php:407
+#: so-widgets-bundle.php:400
 msgid "Support"
 msgstr ""
 

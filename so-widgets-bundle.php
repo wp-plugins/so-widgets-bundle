@@ -18,7 +18,6 @@ include plugin_dir_path(__FILE__).'/base/inc.php';
 include plugin_dir_path(__FILE__).'/icons/icons.php';
 
 
-
 class SiteOrigin_Widgets_Bundle {
 
 	private $widget_folders;
@@ -265,20 +264,14 @@ class SiteOrigin_Widgets_Bundle {
 
 		// Now, lets actually include the files
 		include_once( ABSPATH . 'wp-admin/includes/plugin.php' );
-		if( !is_plugin_active( $widget_id.'/'.$widget_id.'.php' ) ) {
 
-			$loader = false;
-			foreach( $this->widget_folders as $folder ) {
-				if( !file_exists($folder . $widget_id . '/' . $widget_id . '.php') ) continue;
-				$loader = include_once $folder . $widget_id . '/' . $widget_id . '.php';
+		foreach( $this->widget_folders as $folder ) {
+			if( !file_exists($folder . $widget_id . '/' . $widget_id . '.php') ) continue;
+			include_once $folder . $widget_id . '/' . $widget_id . '.php';
+
+			if( has_action('widgets_init') ) {
+				siteorigin_widgets_widgets_init();
 			}
-
-			// Call any loader functions that missed their actions.
-			if( !empty($loader) && is_a($loader, 'SiteOrigin_Widgets_Loader') ) {
-				if ( has_action( 'siteorigin_widgets_base_loaded' ) ) $loader->load_register();
-				if ( has_action( 'widgets_init' ) ) $loader->widgets_init();
-			}
-
 		}
 
 
@@ -286,7 +279,7 @@ class SiteOrigin_Widgets_Bundle {
 	}
 
 	/**
-	 * Activate a widget
+	 * Deactivate a widget
 	 *
 	 * @param $id
 	 */
@@ -368,7 +361,7 @@ class SiteOrigin_Widgets_Bundle {
 				$name = $matches[1];
 				$id = 'so'.strtolower( implode( '-', preg_split('/(?=[A-Z])/',$name) ) ).'-widget';
 
-				$this->activate_widget($id, $class);
+				$this->activate_widget($id, true);
 			}
 		}
 
@@ -391,7 +384,7 @@ class SiteOrigin_Widgets_Bundle {
 			$name = $matches[1];
 			$id = 'so'.strtolower( implode( '-', preg_split('/(?=[A-Z])/',$name) ) ).'-widget';
 
-			$this->activate_widget($id, $class);
+			$this->activate_widget($id, true);
 			global $wp_widget_factory;
 			if( !empty($wp_widget_factory->widgets[$class]) ) return $wp_widget_factory->widgets[$class];
 		}
