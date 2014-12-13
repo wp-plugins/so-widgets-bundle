@@ -3,12 +3,15 @@
 /**
  * Class SiteOrigin_Widget
  *
- * @author Greg Priday
+ * @author SiteOrigin <support@siteorigin.com>
  */
 abstract class SiteOrigin_Widget extends WP_Widget {
 	protected $form_options;
 	protected $base_folder;
 	protected $repeater_html;
+	protected $field_ids;
+
+	protected $current_instance;
 
 	/**
 	 * @var int How many seconds a CSS file is valid for.
@@ -19,6 +22,11 @@ abstract class SiteOrigin_Widget extends WP_Widget {
 		$this->form_options = $form_options;
 		$this->base_folder = $base_folder;
 		$this->repeater_html = array();
+		$this->field_ids = array();
+
+		$control_options = wp_parse_args($widget_options, array(
+			'width' => 600,
+		) );
 		parent::WP_Widget($id, $name, $widget_options, $control_options);
 
 		$this->initialize();
@@ -41,6 +49,7 @@ abstract class SiteOrigin_Widget extends WP_Widget {
 	 */
 	public function widget( $args, $instance ) {
 		$instance = $this->modify_instance($instance);
+		$this->current_instance = $instance;
 
 		$args = wp_parse_args( $args, array(
 			'before_widget' => '',
@@ -86,14 +95,29 @@ abstract class SiteOrigin_Widget extends WP_Widget {
 			$css_name = $this->id_base.'-base';
 		}
 
-
 		$this->enqueue_frontend_scripts();
+		extract( $this->get_template_variables($instance, $args) );
 
+		// A lot of themes, including Underscores, default themes and SiteOrigin themes wrap their content in entry-content
 		echo $args['before_widget'];
 		echo '<div class="so-widget-'.$this->id_base.' so-widget-'.$css_name.'">';
 		@ include siteorigin_widget_get_plugin_dir_path( $this->id_base ) . '/tpl/' . $this->get_template_name($instance) . '.php';
 		echo '</div>';
 		echo $args['after_widget'];
+
+		$this->current_instance = false;
+	}
+
+	/**
+	 * By default, just return an array. Should be overwritten by child widgets.
+	 *
+	 * @param $instance
+	 * @param $args
+	 *
+	 * @return array
+	 */
+	public function get_template_variables( $instance, $args ){
+		return array();
 	}
 
 	public function sub_widget($class, $args, $instance){
@@ -149,15 +173,10 @@ abstract class SiteOrigin_Widget extends WP_Widget {
 		<div class="siteorigin-widget-form siteorigin-widget-form-main siteorigin-widget-form-main-<?php echo esc_attr($class_name) ?>" id="<?php echo $form_id ?>" data-class="<?php echo get_class($this) ?>" style="display: none">
 			<?php
 			foreach( $this->form_options() as $field_name => $field) {
-
-				$value = false;
-				if( isset($instance[$field_name]) ) $value = $instance[$field_name];
-				elseif( isset( $field['default'] ) ) $value = $field['default'];
-
 				$this->render_field(
 					$field_name,
 					$field,
-					$value,
+					isset($instance[$field_name]) ? $instance[$field_name] : null,
 					false
 				);
 			}
@@ -183,6 +202,12 @@ abstract class SiteOrigin_Widget extends WP_Widget {
 				if(typeof $.fn.sowSetupForm != 'undefined') {
 					$('#<?php echo $form_id ?>').sowSetupForm();
 				}
+				else {
+					// Init once admin scripts have been loaded
+					$( document).on('sowadminloaded', function(){
+						$('#<?php echo $form_id ?>').sowSetupForm();
+					});
+				}
 			} )( jQuery );
 		</script>
 		<?php
@@ -193,6 +218,8 @@ abstract class SiteOrigin_Widget extends WP_Widget {
 	 */
 	function enqueue_scripts(){
 
+		$js_suffix = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
+
 		if( !wp_script_is('siteorigin-widget-admin') ) {
 			wp_enqueue_style( 'wp-color-picker' );
 			wp_enqueue_style( 'siteorigin-widget-admin', plugin_dir_url(SOW_BUNDLE_BASE_FILE).'base/css/admin.css', array( 'media-views' ), SOW_BUNDLE_VERSION );
@@ -200,16 +227,18 @@ abstract class SiteOrigin_Widget extends WP_Widget {
 
 			wp_enqueue_script( 'wp-color-picker' );
 			wp_enqueue_media();
-			wp_enqueue_script( 'siteorigin-widget-admin', plugin_dir_url(SOW_BUNDLE_BASE_FILE).'base/js/admin.min.js', array( 'jquery', 'jquery-ui-sortable' ), SOW_BUNDLE_VERSION, true );
+			wp_enqueue_script( 'siteorigin-widget-admin', plugin_dir_url(SOW_BUNDLE_BASE_FILE).'base/js/admin' . $js_suffix . '.js', array( 'jquery', 'jquery-ui-sortable', 'jquery-ui-slider' ), SOW_BUNDLE_VERSION, true );
 
 			wp_localize_script( 'siteorigin-widget-admin', 'soWidgets', array(
 				'sure' => __('Are you sure?', 'siteorigin-widgets')
 			) );
+
+			add_action( 'admin_footer', array( $this, 'footer_admin_templates' ) );
 		}
 
 		if( !wp_script_is('siteorigin-widget-admin-posts-selector') && $this->using_posts_selector() ) {
 
-			wp_enqueue_script( 'siteorigin-widget-admin-posts-selector', plugin_dir_url(SOW_BUNDLE_BASE_FILE).'base/js/posts-selector.min.js', array( 'jquery', 'jquery-ui-sortable', 'jquery-ui-autocomplete', 'underscore', 'backbone' ), SOW_BUNDLE_VERSION, true );
+			wp_enqueue_script( 'siteorigin-widget-admin-posts-selector', plugin_dir_url(SOW_BUNDLE_BASE_FILE).'base/js/posts-selector' . $js_suffix . '.js', array( 'jquery', 'jquery-ui-sortable', 'jquery-ui-autocomplete', 'underscore', 'backbone' ), SOW_BUNDLE_VERSION, true );
 
 			wp_localize_script( 'siteorigin-widget-admin-posts-selector', 'sowPostsSelectorTpl', array(
 				'modal' => file_get_contents( plugin_dir_path(__FILE__).'tpl/posts-selector/modal.html' ),
@@ -226,6 +255,36 @@ abstract class SiteOrigin_Widget extends WP_Widget {
 
 		// This lets the widget enqueue any specific admin scripts
 		$this->enqueue_admin_scripts();
+		$this->get_javascript_variables();
+	}
+
+	/**
+	 * Display all the admin stuff for the footer
+	 */
+	function footer_admin_templates(){
+		?>
+		<script type="text/template" id="so-widgets-bundle-tpl-preview-dialog">
+			<div class="siteorigin-widget-preview-dialog">
+				<div class="siteorigin-widgets-preview-modal-overlay"></div>
+
+				<div class="so-widget-toolbar">
+					<h3><?php _e('Widget Preview', 'siteorigin-widgets') ?></h3>
+					<a href="#" class="close"><span class="dashicons dashicons-arrow-left-alt2"></span></a>
+				</div>
+
+				<div class="so-widget-iframe">
+					<iframe name="siteorigin-widget-preview-iframe" id="siteorigin-widget-preview-iframe" style="visibility: hidden"></iframe>
+				</div>
+
+				<form target="siteorigin-widget-preview-iframe" action="<?php echo admin_url('admin-ajax.php') ?>" method="post">
+					<input type="hidden" name="action" value="so_widgets_preview">
+					<input type="hidden" name="data" value="">
+					<input type="hidden" name="class" value="">
+				</form>
+
+			</div>
+		</script>
+		<?php
 	}
 
 	/**
@@ -333,6 +392,7 @@ abstract class SiteOrigin_Widget extends WP_Widget {
 	 */
 	public function get_instance_css( $instance ){
 		if( !class_exists('lessc') ) require plugin_dir_path( __FILE__ ).'inc/lessc.inc.php';
+		if( !class_exists('SiteOrigin_Widgets_Less_Functions') ) require plugin_dir_path( __FILE__ ).'inc/less-functions.php';
 
 		$style_name = $this->get_style_name($instance);
 		if( empty($style_name) ) return '';
@@ -341,16 +401,21 @@ abstract class SiteOrigin_Widget extends WP_Widget {
 
 		// Substitute the variables
 		if( !class_exists('SiteOrigin_Widgets_Color_Object') ) require plugin_dir_path( __FILE__ ) . 'inc/color.php';
+
+		//handle less @import statements
+		$less = preg_replace_callback( '/^@import\s+".*?\/?([\w-\.]+)";/m', array( $this, 'get_less_import_contents' ), $less );
+
+		// Lets widgets insert their own custom generated LESS
+		$less = preg_replace_callback( '/\.widget-function\((.*)\);/', array( $this, 'less_widget_inject' ), $less );
+
 		$vars = $this->get_less_variables($instance);
 		if( !empty( $vars ) ){
 			foreach($vars as $name => $value) {
 				if(empty($value)) continue;
+
 				$less = preg_replace('/\@'.preg_quote($name).' *\:.*?;/', '@'.$name.': '.$value.';', $less);
 			}
 		}
-
-		$mixins = file_get_contents( plugin_dir_path(__FILE__).'less/mixins.less' );
-		$less = preg_replace('/@import \".*mixins\";/', $mixins."\n\n", $less);
 
 		$style = $this->get_style_name( $instance );
 		$hash = $this->get_style_hash( $instance );
@@ -359,47 +424,131 @@ abstract class SiteOrigin_Widget extends WP_Widget {
 		$less = '.so-widget-'.$css_name.' { '.$less.' } ';
 
 		$c = new lessc();
+		$lc_functions = new SiteOrigin_Widgets_Less_Functions($this, $instance);
+		$lc_functions->registerFunctions($c);
 		return $c->compile($less);
 	}
 
+	private function get_less_import_contents($matches) {
+		$fileName = $matches[1];
+		//get file extenstion
+		preg_match( '/\.\w+$/', $fileName, $ext );
+		//if there is a file extension and it's not .less or .css we ignore
+		if ( ! empty( $ext ) ) {
+			if ( ! ( $ext[0] == '.less' || $ext[0] == '.css' ) ) {
+				return '';
+			}
+		}
+		else {
+			$fileName .= '.less';
+		}
+		//first check local widget styles directory and then bundle less directory
+		$searchPath = array(
+			siteorigin_widget_get_plugin_dir_path( $this->id_base ) . 'styles/',
+			plugin_dir_path( __FILE__ ) . 'less/'
+		);
+
+		foreach ( $searchPath as $dir ) {
+			if ( file_exists( $dir . $fileName ) ) {
+				return file_get_contents( $dir . $fileName )."\n\n";
+			}
+		}
+
+		//file not found
+		return '';
+	}
+
+	private function less_widget_inject($matches){
+		// We're going to lazily split the arguments by comma
+		$args = explode(',', $matches[1]);
+		if( empty($args[0]) ) return '';
+
+		// Shift the function name from the arguments
+		$func = 'less_' . trim( array_shift($args) , '\'"');
+		if( !method_exists($this, $func) ) return '';
+
+		$args = array_map('trim', $args);
+		return call_user_func( array($this, $func), $this->current_instance, $args );
+	}
+
 	/**
+	 * Sanitize all the widget values. Should be used before saving widget into the database.
+	 *
 	 * @param $instance
 	 * @param $fields
 	 */
-	public function sanitize( $instance, $fields ) {
+	public function sanitize( $instance, $fields = false ) {
+
+		if( $fields === false ) {
+			$fields = $this->form_options();
+		}
 
 		foreach($fields as $name => $field) {
-			if(empty($instance[$name])) $instance[$name] = false;
-			elseif($field['type'] == 'select') {
-				$keys = array_keys( $field['options'] );
-				if( !in_array( $instance[$name], $keys ) ) $instance[$name] = isset($field['default']) ? $field['default'] : false;
+			if( empty($instance[$name]) ) {
+				$instance[$name] = false;
 			}
-			elseif($field['type'] == 'number') {
-				$instance[$name] = (float) $instance[$name];
-			}
-			elseif($field['type'] == 'repeater') {
-				foreach($instance[$name] as $i => $sub_instance) {
-					$instance[$name][$i] = $this->sanitize($sub_instance, $field['fields']);
-				}
-			}
-			elseif($field['type'] == 'checkbox') {
-				$instance[$name] = !empty($instance[$name]);
-			}
-			elseif($field['type'] == 'widget') {
 
-				if( !empty($field['class']) && class_exists($field['class']) ) {
-					$the_widget = new $field['class'];
+			switch( $field['type'] ) {
+				case 'select' :
+					$keys = array_keys( $field['options'] );
+					if( !in_array( $instance[$name], $keys ) ) $instance[$name] = isset($field['default']) ? $field['default'] : false;
+					break;
 
-					if( is_a($the_widget, 'SiteOrigin_Widget') ) {
-						$instance[$name] = $the_widget->update($instance[$name], $instance[$name]);
+				case 'number' :
+				case 'slider':
+					$instance[$name] = (float) $instance[$name];
+					break;
+
+				case 'textarea':
+				case 'text' :
+					$instance[$name] = sanitize_text_field($instance[$name]);
+					break;
+
+				case 'color':
+					if ( !preg_match('|^#([A-Fa-f0-9]{3}){1,2}$|', $instance[$name] ) ){
+						// 3 or 6 hex digits, or the empty string.
+						$instance[$name] = false;
 					}
-				}
-			}
-			elseif($field['type'] == 'section') {
-				$instance[$name] = $this->sanitize($instance[$name], $field['fields']);
+					break;
+
+				case 'media' :
+					// Media values should be integer
+					$instance[$name] = intval($instance[$name]);
+					break;
+
+				case 'checkbox':
+					$instance[$name] = !empty($instance[$name]);
+					break;
+
+				case 'widget':
+					if( !empty($field['class']) && class_exists($field['class']) ) {
+						$the_widget = new $field['class'];
+
+						if( is_a($the_widget, 'SiteOrigin_Widget') ) {
+							$instance[$name] = $the_widget->update($instance[$name], $instance[$name]);
+						}
+					}
+					break;
+
+				case 'repeater':
+					if( !empty($instance[$name]) ) {
+						foreach ( $instance[ $name ] as $i => $sub_instance ) {
+							$instance[ $name ][ $i ] = $this->sanitize( $sub_instance, $field['fields'] );
+						}
+					}
+					break;
+
+				case 'section':
+					$instance[$name] = $this->sanitize($instance[$name], $field['fields']);
+					break;
+
+				default:
+					$instance[$name] = sanitize_text_field($instance[$name]);
+					break;
 			}
 
 			if( isset($field['sanitize']) ) {
+				// This field also needs some custom sanitization
 				switch($field['sanitize']) {
 					case 'url':
 						$instance[$name] = esc_url_raw($instance[$name]);
@@ -437,15 +586,25 @@ abstract class SiteOrigin_Widget extends WP_Widget {
 	 *
 	 * @param $field_name
 	 * @param array $repeater
+	 * @param boolean $is_template
 	 *
 	 * @return string
 	 */
-	public function so_get_field_id($field_name, $repeater = array()) {
+	public function so_get_field_id( $field_name, $repeater = array(), $is_template = false ) {
 		if( empty($repeater) ) return $this->get_field_id($field_name);
 		else {
 			$name = $repeater;
 			$name[] = $field_name;
-			return $this->get_field_id(implode('-', $name));
+			$field_id_base = $this->get_field_id(implode('-', $name));
+			if ( $is_template ) {
+				return $field_id_base . '-{id}';
+			}
+			if ( ! isset( $this->field_ids[ $field_id_base ] ) ) {
+				$this->field_ids[ $field_id_base ] = 1;
+			}
+			$curId = $this->field_ids[ $field_id_base ]++;
+
+			return $field_id_base . '-' . $curId;
 		}
 	}
 
@@ -457,39 +616,88 @@ abstract class SiteOrigin_Widget extends WP_Widget {
 	 * @param $value
 	 * @param array $repeater
 	 */
-	function render_field( $name, $field, $value, $repeater = array() ){
-		?><div class="siteorigin-widget-field siteorigin-widget-field-type-<?php echo sanitize_html_class($field['type']) ?> siteorigin-widget-field-<?php echo sanitize_html_class($name) ?>"><?php
+	function render_field( $name, $field, $value, $repeater = array(), $is_template = false ){
+		if ( is_null( $value ) && isset( $field['default'] )) {
+			 $value = $field['default'];
+		}
 
-		if($field['type'] != 'repeater' && $field['type'] != 'checkbox' && $field['type'] != 'separator') {
-			?><label aa for="<?php echo $this->so_get_field_id($name, $repeater) ?>" <?php if( empty($field['hide']) ) echo 'class="siteorigin-widget-section-visible"'; ?>><?php echo $field['label'] ?></label><?php
+		$wrapper_classes = array(
+			'siteorigin-widget-field',
+			'siteorigin-widget-field-type-' . $field['type'],
+			'siteorigin-widget-field-' . $name
+		);
+		if( !empty( $field['state_name'] ) ) $wrapper_classes[] = 'siteorigin-widget-field-state-' . $field['state_name'];
+		if( !empty( $field['hidden'] ) ) $wrapper_classes[] = 'siteorigin-widget-field-is-hidden';
+		if( !empty( $field['optional'] ) ) $wrapper_classes[] = 'siteorigin-widget-field-is-optional';
+
+		?><div class="<?php echo implode(' ', array_map('sanitize_html_class', $wrapper_classes) ) ?>"><?php
+
+		$field_id = $this->so_get_field_id( $name, $repeater, $is_template );
+
+		if( $field['type'] != 'repeater' && $field['type'] != 'checkbox' && $field['type'] != 'separator' && !empty($field['label']) ) {
+			?>
+			<label for="<?php echo $field_id ?>" class="siteorigin-widget-field-label <?php if( empty($field['hide']) ) echo 'siteorigin-widget-section-visible'; ?>">
+				<?php
+				echo $field['label'];
+				if( !empty( $field['optional'] ) ) {
+					echo ' <span class="field-optional">(' . __('Optional', 'siteorigin-panels') . ')</span>';
+				}
+				?>
+			</label>
+			<?php
 		}
 
 		switch( $field['type'] ) {
 			case 'text' :
-				?><input type="text" name="<?php echo $this->so_get_field_name($name, $repeater) ?>" id="<?php echo $this->so_get_field_id($name, $repeater) ?>" value="<?php echo esc_attr($value) ?>" class="widefat siteorigin-widget-input" /><?php
+				?><input type="text" name="<?php echo $this->so_get_field_name($name, $repeater) ?>" id="<?php echo $field_id ?>" value="<?php echo esc_attr($value) ?>" class="widefat siteorigin-widget-input" /><?php
 				break;
 
 			case 'color' :
-				?><input type="text" name="<?php echo $this->so_get_field_name($name, $repeater) ?>" id="<?php echo $this->so_get_field_id($name, $repeater) ?>" value="<?php echo esc_attr($value) ?>" class="widefat siteorigin-widget-input siteorigin-widget-input-color" /><?php
+				?><input type="text" name="<?php echo $this->so_get_field_name($name, $repeater) ?>" id="<?php echo $field_id ?>" value="<?php echo esc_attr($value) ?>" class="widefat siteorigin-widget-input siteorigin-widget-input-color" /><?php
 				break;
 
 			case 'number' :
-				?><input type="text" name="<?php echo $this->so_get_field_name($name, $repeater) ?>" id="<?php echo $this->so_get_field_id($name, $repeater) ?>" value="<?php echo esc_attr($value) ?>" class="widefat siteorigin-widget-input siteorigin-widget-input-number" /><?php
+				?><input type="text" name="<?php echo $this->so_get_field_name($name, $repeater) ?>" id="<?php echo $field_id ?>" value="<?php echo esc_attr($value) ?>" class="widefat siteorigin-widget-input siteorigin-widget-input-number" /><?php
 				break;
 
 			case 'textarea' :
-				?><textarea type="text" name="<?php echo $this->so_get_field_name($name, $repeater) ?>" id="<?php echo $this->so_get_field_id($name, $repeater) ?>" class="widefat siteorigin-widget-input" rows="<?php echo !empty($field['rows']) ? intval($field['rows']) : 4 ?>"><?php echo esc_textarea($value) ?></textarea><?php
+				?><textarea type="text" name="<?php echo $this->so_get_field_name($name, $repeater) ?>" id="<?php echo $field_id ?>" class="widefat siteorigin-widget-input" rows="<?php echo !empty($field['rows']) ? intval($field['rows']) : 4 ?>"><?php echo esc_textarea($value) ?></textarea><?php
 				break;
 
 			case 'editor' :
-				?><textarea type="text" name="<?php echo $this->so_get_field_name($name, $repeater) ?>" id="<?php echo $this->so_get_field_id($name, $repeater) ?>" class="widefat siteorigin-widget-input siteorigin-widget-input-editor" rows="<?php echo !empty($field['rows']) ? intval($field['rows']) : 4 ?>"><?php echo esc_textarea($value) ?></textarea><?php
+				// The editor field doesn't actually work yet, this is just a placeholder
+				?><textarea type="text" name="<?php echo $this->so_get_field_name($name, $repeater) ?>" id="<?php echo $field_id ?>" class="widefat siteorigin-widget-input siteorigin-widget-input-editor" rows="<?php echo !empty($field['rows']) ? intval($field['rows']) : 4 ?>"><?php echo esc_textarea($value) ?></textarea><?php
+				break;
+
+			case 'slider':
+				?>
+				<div class="siteorigin-widget-slider-value"><?php echo !empty($value) ? $value : 0 ?></div>
+				<div class="siteorigin-widget-slider-wrapper">
+					<div class="siteorigin-widget-value-slider"></div>
+				</div>
+				<input
+					type="number"
+					name="<?php echo $this->so_get_field_name($name, $repeater) ?>"
+					id="<?php echo $field_id ?>"
+					value="<?php echo !empty($value) ? esc_attr($value) : 0 ?>"
+					min="<?php echo isset($field['min']) ? intval($field['min']) : 0 ?>"
+					max="<?php echo isset($field['max']) ? intval($field['max']) : 100 ?>"
+					data-integer="<?php echo !empty( $field['integer'] ) ? 'true' : 'false' ?>" />
+				<?php
 				break;
 
 			case 'select':
 				?>
-				<select name="<?php echo $this->so_get_field_name($name, $repeater) ?>" id="<?php echo $this->so_get_field_id($name, $repeater) ?>" class="siteorigin-widget-input">
-					<?php foreach( $field['options'] as $v => $t ) : ?>
-						<option value="<?php echo esc_attr($v) ?>" <?php selected($v, $value) ?>><?php echo esc_html($t) ?></option>
+				<select name="<?php echo $this->so_get_field_name($name, $repeater) ?>" id="<?php echo $field_id ?>" class="siteorigin-widget-input">
+					<?php
+					if ( isset( $field['prompt'] ) ) {
+						?>
+						<option value="default" disabled="disabled" selected="selected"><?php echo esc_html( $field['prompt'] ) ?></option>
+						<?php
+					}
+					?>
+					<?php foreach( $field['options'] as $key => $val ) : ?>
+							<option value="<?php echo esc_attr($key) ?>" <?php selected($key, $value) ?>><?php echo esc_html($val) ?></option>
 					<?php endforeach; ?>
 				</select>
 				<?php
@@ -497,10 +705,20 @@ abstract class SiteOrigin_Widget extends WP_Widget {
 
 			case 'checkbox':
 				?>
-				<label for="<?php echo $this->so_get_field_id($name, $repeater) ?>">
-					<input type="checkbox" name="<?php echo $this->so_get_field_name($name, $repeater) ?>" id="<?php echo $this->so_get_field_id($name, $repeater) ?>" class="siteorigin-widget-input" <?php checked( !empty( $value ) ) ?> />
+				<label for="<?php echo $field_id ?>">
+					<input type="checkbox" name="<?php echo $this->so_get_field_name($name, $repeater) ?>" id="<?php echo $field_id ?>" class="siteorigin-widget-input" <?php checked( !empty( $value ) ) ?> />
 					<?php echo $field['label'] ?>
 				</label>
+				<?php
+				break;
+
+			case 'radio':
+				?>
+				<?php foreach( $field['options'] as $k => $v ) : ?>
+					<label for="<?php echo $field_id . '-' . $k ?>">
+						<input type="radio" name="<?php echo $this->so_get_field_name($name, $repeater) ?>" id="<?php echo $field_id . '-' . $k ?>" class="siteorigin-widget-input" value="<?php echo esc_attr($k) ?>" <?php checked( $k, $value ) ?>> <?php echo esc_html($v) ?>
+					</label>
+				<?php endforeach; ?>
 				<?php
 				break;
 
@@ -565,16 +783,25 @@ abstract class SiteOrigin_Widget extends WP_Widget {
 					$this->render_field(
 						$sub_field_name,
 						$sub_field,
-						isset($value[$sub_field_name]) ? $value[$sub_field_name] : false,
-						$repeater
+						isset($value[$sub_field_name]) ? $value[$sub_field_name] : null,
+						$repeater,
+						true
 					);
 				}
 				$html = ob_get_clean();
 
 				$this->repeater_html[$name] = $html;
 
+				$item_label = isset( $field['item_label'] ) ? $field['item_label'] : null;
+				if ( ! empty( $item_label ) ) {
+					// convert underscore naming convention to camelCase for javascript
+					// and encode as json string
+					$item_label = $this->underscores_to_camel_case( $item_label );
+					$item_label = json_encode( $item_label );
+				}
+
 				?>
-				<div class="siteorigin-widget-field-repeater" data-item-name="<?php echo esc_attr( $field['item_name'] ) ?>" data-repeater-name="<?php echo esc_attr($name) ?>">
+				<div class="siteorigin-widget-field-repeater" data-item-name="<?php echo esc_attr( $field['item_name'] ) ?>" data-repeater-name="<?php echo esc_attr($name) ?>" <?php echo ! empty( $item_label ) ? 'data-item-label="' . esc_attr( $item_label ) . '"' : '' ?>>
 					<div class="siteorigin-widget-field-repeater-top">
 						<div class="siteorigin-widget-field-repeater-expend"></div>
 						<h3><?php echo $field['label'] ?></h3>
@@ -584,7 +811,7 @@ abstract class SiteOrigin_Widget extends WP_Widget {
 						if( !empty( $value ) ) {
 							foreach( $value as $v ) {
 								?>
-								<div class="siteorigin-widget-field-repeater-item">
+								<div class="siteorigin-widget-field-repeater-item ui-draggable">
 									<div class="siteorigin-widget-field-repeater-item-top">
 										<div class="siteorigin-widget-field-expand"></div>
 										<div class="siteorigin-widget-field-remove"></div>
@@ -596,7 +823,7 @@ abstract class SiteOrigin_Widget extends WP_Widget {
 											$this->render_field(
 												$sub_field_name,
 												$sub_field,
-												isset($v[$sub_field_name]) ? $v[$sub_field_name] : false,
+												isset($v[$sub_field_name]) ? $v[$sub_field_name] : null,
 												$repeater
 											);
 										}
@@ -618,15 +845,10 @@ abstract class SiteOrigin_Widget extends WP_Widget {
 				$sub_widget = new $field['class'];
 				?><div class="siteorigin-widget-section <?php if( !empty($field['hide']) ) echo 'siteorigin-widget-section-hide'; ?>"><?php
 				foreach( $sub_widget->form_options() as $sub_name => $sub_field) {
-
-					if( isset($value[$sub_name]) ) $sub_value  = $value[$sub_name];
-					elseif( isset($sub_field['default']) ) $sub_value  = $sub_field['default'];
-					else $sub_value = false;
-
 					$this->render_field(
 						$name.']['.$sub_name,
 						$sub_field,
-						$sub_value,
+						isset($value[$sub_name]) ? $value[$sub_name] : null,
 						$repeater
 					);
 				}
@@ -658,14 +880,10 @@ abstract class SiteOrigin_Widget extends WP_Widget {
 			case 'section' :
 				?><div class="siteorigin-widget-section <?php if( !empty($field['hide']) ) echo 'siteorigin-widget-section-hide'; ?>"><?php
 				foreach( (array) $field['fields'] as $sub_name=> $sub_field ) {
-					if( isset($value[$sub_name]) ) $sub_value  = $value[$sub_name];
-					elseif( isset($sub_field['default']) ) $sub_value  = $sub_field['default'];
-					else $sub_value = false;
-
 					$this->render_field(
 						$name.']['.$sub_name,
 						$sub_field,
-						$sub_value,
+						isset($value[$sub_name]) ? $value[$sub_name] : null,
 						$repeater
 					);
 				}
@@ -679,10 +897,32 @@ abstract class SiteOrigin_Widget extends WP_Widget {
 		}
 
 		if(!empty($field['description'])) {
-			?><div class="siteorigin-widget-field-description"><?php echo esc_html($field['description']) ?></div><?php
+			?><div class="siteorigin-widget-field-description"><?php echo wp_kses_post($field['description']) ?></div><?php
 		}
 
 		?></div><?php
+	}
+
+
+	/**
+	 * Convert underscore naming convention to camel case. Useful for data to be handled by javascript.
+	 *
+	 * @param $array array Input array of which the keys will be transformed.
+	 * @return array The transformed array with camel case keys.
+	 */
+	protected function underscores_to_camel_case( $array ) {
+		$transformed = array();
+		if ( !empty( $array ) ) {
+			foreach ( $array as $key => $val ) {
+				$jsKey = preg_replace_callback( '/_(.?)/', array($this, 'match_to_upper'), $key );
+				$transformed[ $jsKey ] = $val;
+			}
+		}
+		return $transformed;
+	}
+
+	private function match_to_upper( $matches ) {
+		return strtoupper( $matches[1] );
 	}
 
 	/**
@@ -699,7 +939,7 @@ abstract class SiteOrigin_Widget extends WP_Widget {
 	}
 
 	/**
-	 * Get a hash that makes the design unique
+	 * Get a hash that uniquely identifies this instance.
 	 *
 	 * @param $instance
 	 * @return string
@@ -756,7 +996,12 @@ abstract class SiteOrigin_Widget extends WP_Widget {
 	}
 
 	/**
-	 * Can be overwritten by child themes to enqueue scripts and styles for the frontend
+	 * Can be overwritten by child widgets to make variables available to javascript via ajax calls.
+	 */
+	function get_javascript_variables(){ }
+
+	/**
+	 * Can be overwritten by child widgets to enqueue scripts and styles for the frontend.
 	 */
 	function enqueue_frontend_scripts(){ }
 

@@ -4,6 +4,10 @@
         return $(this).each( function(i, el){
             var $el = $(el);
 
+            // Skip this if the widget has any fields with an __i__
+            var $inputs = $el.find('input');
+            if( $inputs.length && $inputs.attr('name').indexOf('__i__') !== -1 ) return this;
+
             // Skip this if we've already set up the form
             if( $el.is('.siteorigin-widget-form-main') ) {
                 if( $el.data('sow-form-setup') == true ) return true;
@@ -30,7 +34,7 @@
             $fields.find('> .siteorigin-widget-field-repeater').sowSetupRepeater();
 
             // For any repeater items currently in existence
-            $el.find('.siteorigin-widget-field-repeater-item').sowSetupRepeaterActions();
+            $el.find('.siteorigin-widget-field-repeater-item').sowSetupRepeaterItems();
 
             // Set up any color fields
             $fields.find('> .siteorigin-widget-input-color').wpColorPicker()
@@ -137,7 +141,7 @@
                         $(this ).fadeOut('fast');
                     });
 
-            })
+            });
 
             // Handle toggling of the sub widget form
             $fields.filter('.siteorigin-widget-field-type-widget, .siteorigin-widget-field-type-section').find('> label').click(function(){
@@ -232,6 +236,23 @@
 
             });
 
+            $fields.filter('.siteorigin-widget-field-type-slider').each(function(){
+                var $$ = $(this);
+                var $input = $$.find('input[type="number"]');
+                var $c = $$.find('.siteorigin-widget-value-slider');
+
+                $c.slider({
+                    max: parseInt( $input.attr('max') ),
+                    min: parseInt( $input.attr('min') ),
+                    value: parseInt( $input.val() ),
+                    step: 1,
+                    slide: function( event, ui ) {
+                        $input.val( parseInt(ui.value) );
+                        $$.find('.siteorigin-widget-slider-value').html( ui.value );
+                    }
+                });
+            });
+
             // Give plugins a chance to influence the form
             $el.trigger('sowsetupform').data('sow-form-setup', true);
             $el.find('.siteorigin-widget-field-repeater-item').trigger('updateFieldPositions');
@@ -248,14 +269,15 @@
 
         previewButton.find('> a').click(function(e){
             e.preventDefault();
-            var data = {};
 
+            // Lets build the data from the widget
+            var data = {};
             $el.find( '*[name]' ).each( function () {
                 var $$ = $(this);
-                var name = /[a-zA-Z\-]+\[[0-9]+\]\[(.*)\]/.exec( $$.attr('name') );
+                var name = /[a-zA-Z\-]+\[[a-z0-9]+\]\[(.*)\]/.exec( $$.attr('name') );
 
                 name = name[1];
-                parts = name.split('][');
+                var parts = name.split('][');
 
                 // Make sure we either have numbers or strings
                 parts = parts.map(function(e){
@@ -268,7 +290,16 @@
                     if(i == parts.length - 1) {
                         // This is the end, so we need to store the actual field value here
                         if( $$.attr('type') == 'checkbox' ){
-                            if ( $$.is(':checked') ) sub[ parts[i] ] = $$.val() != '' ? $$.val() : true;
+                            if ( $$.is(':checked') ) {
+                                sub[ parts[i] ] = $$.val() != '' ? $$.val() : true;
+                            } else {
+                                sub[ parts[i] ] = false;
+                            }
+                        }
+                        else if( $$.attr('type') == 'radio' ){
+                            if ( $$.is(':checked') ) {
+                                sub[ parts[i] ] = $$.val() != '' ? $$.val() : true;
+                            }
                         }
                         else sub[ parts[i] ] = $$.val();
                     }
@@ -282,26 +313,16 @@
                 }
             } );
 
-            // Create the modal
-            var overlay = $('<div class="siteorigin-widgets-preview-modal-overlay"></div>').appendTo('body');
-            var modal = $('<div class="siteorigin-widgets-preview-modal"></div>').appendTo('body');
-            var close = $('<div class="siteorigin-widgets-preview-close dashicons dashicons-no"></div>').appendTo(modal);
-            var iframe = $('<iframe class="siteorigin-widgets-preview-iframe" scrolling="no"></iframe>').appendTo(modal);
+            // Create a new modal window
+            var modal = $( $('#so-widgets-bundle-tpl-preview-dialog').html()).appendTo('body');
+            modal.find('input[name="data"]').val( JSON.stringify(data) );
+            modal.find('input[name="class"]').val( $el.data('class') );
+            modal.find('iframe').on('load', function(){
+                $(this).css('visibility', 'visible');
+            });
+            modal.find('form').submit();
 
-            $.post(
-                ajaxurl,
-                {
-                    'action' : 'so_widgets_preview',
-                    'data' : JSON.stringify(data),
-                    'class' : $el.data('class')
-                },
-                function(html) {
-                    iframe.contents().find('body').html( html );
-                }
-            );
-
-            close.add(overlay).click(function(){
-                overlay.remove();
+            modal.find('.close').click(function(){
                 modal.remove();
             });
         });
@@ -384,11 +405,11 @@
         return $(this).each( function(i, el){
 
             var $el = $(el);
-            var theClass = $el.closest('.siteorigin-widget-form').data('class');
-
             var formClass = $el.closest('.siteorigin-widget-form').data('class');
+            var $nextIndex = $el.find('> .siteorigin-widget-field-repeater-items').children().length+1;
+            var repeaterHtml = window.sow_repeater_html[formClass][$el.data('repeater-name')].replace(/\{id\}/g, $nextIndex);
 
-            var item = $('<div class="siteorigin-widget-field-repeater-item" />')
+            var item = $('<div class="siteorigin-widget-field-repeater-item ui-draggable" />')
                 .append(
                     $('<div class="siteorigin-widget-field-repeater-item-top" />')
                         .append(
@@ -403,42 +424,61 @@
                 )
                 .append(
                     $('<div class="siteorigin-widget-field-repeater-item-form" />')
-                        .html( window.sow_repeater_html[formClass][$el.data('repeater-name')] )
-                )
-                .sowSetupRepeaterActions();
+                        .html( repeaterHtml )
+                );
 
             // Add the item and refresh
             $el.find('> .siteorigin-widget-field-repeater-items').append(item).sortable( "refresh").trigger('updateFieldPositions');
+            item.sowSetupRepeaterItems()
             item.hide().slideDown('fast');
 
         } );
     };
 
-    $.fn.sowSetupRepeaterActions = function(){
-        return $(this).each( function(i, el){
+    $.fn.sowSetupRepeaterItems = function () {
+        return $(this).each(function (i, el) {
             var $el = $(el);
 
-            if(typeof $el.data('sowrepeater-actions-setup') == 'undefined') {
-                var top = $el.find('> .siteorigin-widget-field-repeater-item-top');
-
-                top.find('.siteorigin-widget-field-expand')
-                    .click(function(e){
-                        e.preventDefault();
-                        $(this).closest('.siteorigin-widget-field-repeater-item').find('.siteorigin-widget-field-repeater-item-form').eq(0).slideToggle('fast', function(){
-                            if(typeof $.fn.dialog != 'undefined') {
-                                $(this).closest('.panel-dialog').dialog("option", "position", "center");
+            if (typeof $el.data('sowrepeater-actions-setup') == 'undefined') {
+                var $parentRepeater = $el.closest('.siteorigin-widget-field-repeater');
+                var itemTop = $el.find('> .siteorigin-widget-field-repeater-item-top');
+                var itemLabel = $parentRepeater.data('item-label');
+                if (itemLabel && itemLabel.selector) {
+                    var updateLabel = function () {
+                        var txt = $el.find(itemLabel.selector)[itemLabel.valueMethod]();
+                        if (txt) {
+                            if (txt.length > 80) {
+                                txt = txt.substr(0, 79) + '...'
                             }
-                        });
-                    });
+                            itemTop.find('h4').text(txt);
+                        }
+                    };
+                    updateLabel();
+                    if (itemLabel.updateEvent) {
+                        $el.bind(itemLabel.updateEvent, updateLabel);
+                    }
+                }
 
-                top.find('.siteorigin-widget-field-remove')
-                    .click(function(e){
+                itemTop.click(function (e) {
+                    if (e.target.className == "siteorigin-widget-field-remove") {
+                        return;
+                    }
+                    e.preventDefault();
+                    $(this).closest('.siteorigin-widget-field-repeater-item').find('.siteorigin-widget-field-repeater-item-form').eq(0).slideToggle('fast', function () {
+                        if (typeof $.fn.dialog != 'undefined') {
+                            $(this).closest('.panel-dialog').dialog("option", "position", "center");
+                        }
+                    });
+                });
+
+                itemTop.find('.siteorigin-widget-field-remove')
+                    .click(function (e) {
                         e.preventDefault();
-                        if(confirm(soWidgets.sure)) {
+                        if (confirm(soWidgets.sure)) {
                             var $s = $(this).closest('.siteorigin-widget-field-repeater-items');
-                            $(this).closest('.siteorigin-widget-field-repeater-item').slideUp('fast', function(){
+                            $(this).closest('.siteorigin-widget-field-repeater-item').slideUp('fast', function () {
                                 $(this).remove();
-                                $s.sortable( "refresh" ).trigger('updateFieldPositions');
+                                $s.sortable("refresh").trigger('updateFieldPositions');
                             });
                         }
                     });
@@ -448,7 +488,7 @@
                 $el.data('sowrepeater-actions-setup', true);
             }
         });
-    }
+    };
 
     // When we click on a widget top
     $('.widgets-holder-wrap').on('click', '.widget:has(.siteorigin-widget-form-main) .widget-top', function(){
@@ -460,5 +500,7 @@
     $(document).on('dialogopen', function(e){
         $(e.target).find('.siteorigin-widget-form-main').sowSetupForm();
     });
+
+    $(document).trigger('sowadminloaded');
 
 })(jQuery);

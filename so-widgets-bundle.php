@@ -3,24 +3,38 @@
 /*
 Plugin Name: SiteOrigin Widgets Bundle
 Description: A collection of all our widgets, neatly bundled into a single plugin.
-Version: 1.0.5
-Author: Greg Priday
+Version: 1.1
+Author: SiteOrigin
 Author URI: http://siteorigin.com
 Plugin URI: http://siteorigin.com/widgets-bundle/
 License: GPL3
 License URI: https://www.gnu.org/licenses/gpl-3.0.txt
 */
 
-define('SOW_BUNDLE_VERSION', '1.0.5');
+define('SOW_BUNDLE_VERSION', '1.1');
 define('SOW_BUNDLE_BASE_FILE', __FILE__);
 
-include plugin_dir_path(__FILE__).'/base/inc.php';
-include plugin_dir_path(__FILE__).'/icons/icons.php';
+// We're going to include this check until version 1.2
+if( !function_exists('siteorigin_widget_get_plugin_path') ) {
+	include plugin_dir_path(__FILE__).'base/inc.php';
+	include plugin_dir_path(__FILE__).'icons/icons.php';
+}
 
 
 class SiteOrigin_Widgets_Bundle {
 
 	private $widget_folders;
+
+	/**
+	 * @var array The array of default widgets.
+	 */
+	static $default_active_widgets = array(
+		'so-button-widget' => true,
+		'so-google-map-widget' => true,
+		'so-image-widget' => true,
+		'so-slider-widget' => true,
+		'so-post-carousel-widget' => true,
+	);
 
 	function __construct(){
 		add_action('admin_init', array($this, 'admin_activate_widget') );
@@ -42,11 +56,6 @@ class SiteOrigin_Widgets_Bundle {
 		add_filter( 'siteorigin_panels_data', array($this, 'load_missing_widgets') );
 		add_filter( 'siteorigin_panels_prebuilt_layout', array($this, 'load_missing_widgets') );
 		add_filter( 'siteorigin_panels_widget_object', array($this, 'load_missing_widget'), 10, 2 );
-
-		// We can use this filter to add more folders to search for widgets
-		$this->widget_folders = apply_filters('siteorigin_widgets_widget_folders', array(
-			plugin_dir_path(__FILE__).'widgets/'
-		) );
 	}
 
 	/**
@@ -85,6 +94,7 @@ class SiteOrigin_Widgets_Bundle {
 		if( empty($active_version) || version_compare( $active_version, SOW_BUNDLE_VERSION, '<' ) ) {
 			// If this is a new version, then clear the cache.
 			update_option( 'siteorigin_widget_bundle_version', SOW_BUNDLE_VERSION );
+			siteorigin_widgets_deactivate_legacy_plugins();
 
 			// Remove all cached CSS for SiteOrigin Widgets
 			if( function_exists('WP_Filesystem') && WP_Filesystem() ) {
@@ -114,13 +124,20 @@ class SiteOrigin_Widgets_Bundle {
 	 */
 	function load_widget_plugins(){
 
+		if( empty($this->widget_folders) ) {
+			// We can use this filter to add more folders to use for widgets
+			$this->widget_folders = apply_filters('siteorigin_widgets_widget_folders', array(
+				plugin_dir_path(__FILE__).'widgets/'
+			) );
+		}
+
 		// Load all the widget we currently have active and filter them
-		$active_widgets = apply_filters( 'siteorigin_widgets_active_widgets', get_option( 'siteorigin_widgets_active', array() ) );
+		$active_widgets = $this->get_active_widgets();
 
 		foreach( array_keys($active_widgets) as $widget_id ) {
 
 			foreach( $this->widget_folders as $folder ) {
-				if( !file_exists($folder . $widget_id.'/'.$widget_id.'.php') ) continue;
+				if ( !file_exists($folder . $widget_id.'/'.$widget_id.'.php') ) continue;
 
 				// Include this widget file
 				include_once $folder . $widget_id.'/'.$widget_id.'.php';
@@ -130,16 +147,33 @@ class SiteOrigin_Widgets_Bundle {
 	}
 
 	/**
+	 * Get a list of currently active widgets.
+	 *
+	 * @param bool $filter
+	 *
+	 * @return mixed|void
+	 */
+	function get_active_widgets( $filter = true ){
+		// Load all the widget we currently have active and filter them
+		$active_widgets = get_option( 'siteorigin_widgets_active', self::$default_active_widgets );
+		if($filter) {
+			$active_widgets = apply_filters( 'siteorigin_widgets_active_widgets',  $active_widgets);
+		}
+
+		return $active_widgets;
+	}
+
+	/**
 	 * Enqueue the admin page stuff.
 	 */
 	function admin_enqueue_scripts($prefix) {
 		if( $prefix != 'plugins_page_so-widgets-plugins' ) return;
 		wp_enqueue_style( 'siteorigin-widgets-bundle-admin', plugin_dir_url( __FILE__ ) . 'css/admin.css', array(), SOW_BUNDLE_VERSION );
-		wp_enqueue_script( 'siteorigin-widgets-bundle-admin', plugin_dir_url( __FILE__ ) . 'js/admin.min.js', array(), SOW_BUNDLE_VERSION );
+		wp_enqueue_script( 'siteorigin-widgets-bundle-admin', plugin_dir_url( __FILE__ ) . 'js/admin.js', array(), SOW_BUNDLE_VERSION );
 	}
 
 	/**
-	 * The fallback URL handler for activating or deactivating a widget
+	 * The fallback (from ajax) URL handler for activating or deactivating a widget
 	 */
 	function admin_activate_widget() {
 		if(
@@ -254,8 +288,8 @@ class SiteOrigin_Widgets_Bundle {
 		if( !$exists ) return false;
 
 		// There are times when we activate several widgets at once, so clear the cache.
-		// wp_cache_delete( 'siteorigin_widgets_active', 'options' );
-		$active_widgets = get_option( 'siteorigin_widgets_active', array() );
+		wp_cache_delete( 'siteorigin_widgets_active', 'options' );
+		$active_widgets = $this->get_active_widgets();
 		$active_widgets[$widget_id] = true;
 		update_option( 'siteorigin_widgets_active', $active_widgets );
 
@@ -284,7 +318,7 @@ class SiteOrigin_Widgets_Bundle {
 	 * @param $id
 	 */
 	function deactivate_widget($id){
-		$active_widgets = get_option( 'siteorigin_widgets_active', array() );
+		$active_widgets = $this->get_active_widgets();
 		unset($active_widgets[$id]);
 		update_option( 'siteorigin_widgets_active', $active_widgets );
 	}
@@ -293,7 +327,7 @@ class SiteOrigin_Widgets_Bundle {
 	 * Gets a list of all available widgets
 	 */
 	function get_widgets_list(){
-		$active = get_option('siteorigin_widgets_active', array());
+		$active = $this->get_active_widgets();
 
 		$default_headers = array(
 			'Name' => 'Widget Name',
@@ -315,6 +349,7 @@ class SiteOrigin_Widgets_Bundle {
 
 				$widget['ID'] = $id;
 				$widget['Active'] = !empty($active[$id]);
+				$widget['File'] = $file;
 
 				$widgets[$file] = $widget;
 			}
@@ -404,3 +439,18 @@ class SiteOrigin_Widgets_Bundle {
 
 // create the initial single
 SiteOrigin_Widgets_Bundle::single();
+
+/**
+ * Deactivate any old widget plugins that we used to have on the directory. We'll remove this after version 1.2.
+ */
+function siteorigin_widgets_deactivate_legacy_plugins(){
+	// All we want to do here is disable all legacy widgets
+	$the_plugins = get_option('active_plugins');
+	foreach($the_plugins as $plugin_id) {
+		if( preg_match('/^so-([a-z\-]+)-widget\/so-([a-z\-]+)-widget\.php$/', $plugin_id) ) {
+			// Deactivate the legacy plugin
+			deactivate_plugins($plugin_id, true);
+		}
+	}
+}
+register_activation_hook( __FILE__, 'siteorigin_widgets_deactivate_legacy_plugins' );

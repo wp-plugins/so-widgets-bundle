@@ -29,6 +29,11 @@ class SiteOrigin_Widget_PriceTable_Widget extends SiteOrigin_Widget {
 					'type' => 'repeater',
 					'label' => __('Columns', 'siteorigin-widgets'),
 					'item_name' => __('Column', 'siteorigin-widgets'),
+					'item_label' => array(
+						'selector' => "[id*='columns-title']",
+						'update_event' => 'change',
+						'value_method' => 'val'
+					),
 					'fields' => array(
 						'featured' => array(
 							'type' => 'checkbox',
@@ -69,6 +74,11 @@ class SiteOrigin_Widget_PriceTable_Widget extends SiteOrigin_Widget {
 							'type' => 'repeater',
 							'label' => __('Features', 'siteorigin-widgets'),
 							'item_name' => __('Feature', 'siteorigin-widgets'),
+							'item_label' => array(
+								'selector' => "[id*='columns-features-text']",
+								'update_event' => 'change',
+								'value_method' => 'val'
+							),
 							'fields' => array(
 								'text' => array(
 									'type' => 'text',
@@ -192,7 +202,8 @@ class SiteOrigin_Widget_PriceTable_Widget extends SiteOrigin_Widget {
 	 * Load the front end scripts for the price table.
 	 */
 	function enqueue_frontend_scripts(){
-		wp_enqueue_script( 'siteorigin-pricetable', siteorigin_widget_get_plugin_dir_url('price-table').'js/pricetable.min.js', array('jquery') );
+		$js_suffix = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
+		wp_enqueue_script( 'siteorigin-pricetable', siteorigin_widget_get_plugin_dir_url('price-table').'js/pricetable' . $js_suffix . '.js', array('jquery') );
 	}
 
 	/**

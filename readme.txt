@@ -4,7 +4,7 @@ Requires at least: 3.8
 Tested up to: 3.9.1
 Stable tag: 1.0.4
 License: GPLv3 or later
-Contributors: gpriday
+Contributors: gpriday, braam-genis
 
 == Description ==
 
@@ -12,10 +12,11 @@ Contributors: gpriday
 
 Widgets are great. No matter where you’re using them. In a [Page Builder](http://siteorigin.com/page-builder/) page or on your widgetized areas.
 
-The SiteOrigin widget bundle gives you a collection of widgets that you can use, abuse and customize. All the widgets are built on the same framework, giving you unlimited colours and 1500+ icons.
+The SiteOrigin widget bundle gives you a collection of widgets that you can use and customize. All the widgets are built on our powerful framework, giving you advanced forms, unlimited colours and 1500+ icons.
 
 The collection is growing, but here’s what we have so far.
 
+* Google Maps Widget that's going places.
 * Button Widget that you’ll love to click.
 * Image Widget that’ll let you add images everywhere.
 * Call To Action Widget that’ll get your users performing the actions you want.
@@ -35,6 +36,16 @@ Once you enable a widget, you'll be able to use it anywhere standard widgets are
 3. An example of the button widget.
 
 == Changelog ==
+
+= 1.1 =
+* Added powerful Google Maps widget.
+* Improved data sanitization.
+* Various UI improvements.
+
+= 1.0.6 =
+* Fixed issues with adding extra widget folders.
+* Added compatibility with WordPress Customizer.
+* Added more fields to be used with future widgets.
 
 = 1.0.5 =
 * Removed legacy widget deactivation functions.
