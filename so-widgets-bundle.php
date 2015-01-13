@@ -3,7 +3,7 @@
 /*
 Plugin Name: SiteOrigin Widgets Bundle
 Description: A collection of all our widgets, neatly bundled into a single plugin.
-Version: 1.1.1
+Version: 1.1.2
 Author: SiteOrigin
 Author URI: http://siteorigin.com
 Plugin URI: http://siteorigin.com/widgets-bundle/
@@ -11,7 +11,7 @@ License: GPL3
 License URI: https://www.gnu.org/licenses/gpl-3.0.txt
 */
 
-define('SOW_BUNDLE_VERSION', '1.1.1');
+define('SOW_BUNDLE_VERSION', '1.1.2');
 define('SOW_BUNDLE_BASE_FILE', __FILE__);
 
 // We're going to include this check until version 1.2
@@ -41,6 +41,7 @@ class SiteOrigin_Widgets_Bundle {
 		add_action('admin_menu', array($this, 'admin_menu_init') );
 		add_action('admin_enqueue_scripts', array($this, 'admin_enqueue_scripts') );
 		add_action('wp_ajax_so_widgets_bundle_manage', array($this, 'admin_ajax_manage_handler') );
+		add_action('wp_ajax_sow_get_javascript_variables', array($this, 'admin_ajax_get_javascript_variables') );
 
 		// Initialize the widgets, but do it fairly late
 		add_action( 'plugins_loaded', array($this, 'set_plugin_textdomain'), 1 );
@@ -271,6 +272,24 @@ class SiteOrigin_Widgets_Bundle {
 	}
 
 	/**
+	 * Get javascript variables for admin.
+	 */
+	function admin_ajax_get_javascript_variables() {
+		$result = array();
+		$widget_class = $_POST['widget'];
+		global $wp_widget_factory;
+		if ( ! empty( $wp_widget_factory->widgets[ $widget_class ] ) ) {
+			$widget = $wp_widget_factory->widgets[ $widget_class ];
+			$result = $widget->get_javascript_variables();
+		}
+
+		header('content-type: application/json');
+		echo json_encode($result);
+
+		exit();
+	}
+
+	/**
 	 * Activate a widget
 	 *
 	 * @param string $widget_id The ID of the widget that we're activating.
@@ -344,6 +363,10 @@ class SiteOrigin_Widgets_Bundle {
 			$files = glob( $folder.'*/*.php' );
 			foreach($files as $file) {
 				$widget = get_file_data( $file, $default_headers, 'siteorigin-widget' );
+				//skip the file if it's missing a name
+				if ( empty( $widget['Name'] ) ) {
+					continue;
+				}
 				$f = pathinfo($file);
 				$id = $f['filename'];
 
