@@ -23,12 +23,14 @@ var soWidgetPostSelector = ( function ($, _) {
 
         updateWithQuery: function(query){
             // Ignore empty queries
-            if(query == '') return;
+            if(query === '') {
+                return;
+            }
 
             // Reset the post collection by fetching the results from the server
             var c = this;
             $.post(
-                ajaxurl,
+                sowPostsSelectorTpl.ajaxurl,
                 { action: 'sow_get_posts', query: query, 'ignore_pagination' : true },
                 function(data){
                     c.foundPosts = data.found_posts;
@@ -51,18 +53,22 @@ var soWidgetPostSelector = ( function ($, _) {
         post_type: null,
         terms: null,
         post_status: null,
+        posts_per_page: null,
         post__in: null,
         tax_query: null,
 
         // The order fields for get_posts.
         orderby: null,
         order: null,
+        sticky: null,
 
         defaults: {
             'post_type' : 'post',
             'orderby' : 'post_date',
             'order' : 'DESC',
-            'post_status' : 'publish'
+            'posts_per_page' : '',
+            'post_status' : 'publish',
+            'sticky' : ''
         },
 
         initialize: function(params, options) {
@@ -72,13 +78,15 @@ var soWidgetPostSelector = ( function ($, _) {
         // Get the post query model as a WordPress get_posts query
         getQuery: function(){
             var query = [];
-            if( typeof this.get('post_type') != 'undefined' ) query.push('post_type=' + this.get('post_type'));
-            if( typeof this.get('post__in') != 'undefined' && !_.isEmpty( this.get('post__in') ) ) query.push( 'post__in=' + this.get('post__in').join(',') );
-            if( typeof this.get('tax_query') != 'undefined' && !_.isEmpty( this.get('tax_query') ) ) query.push( 'tax_query=' + this.get('tax_query').join(',') );
+            if( typeof this.get('post_type') !== 'undefined' ) query.push('post_type=' + this.get('post_type'));
+            if( typeof this.get('post__in') !== 'undefined' && !_.isEmpty( this.get('post__in') ) ) query.push( 'post__in=' + this.get('post__in').join(',') );
+            if( typeof this.get('tax_query') !== 'undefined' && !_.isEmpty( this.get('tax_query') ) ) query.push( 'tax_query=' + this.get('tax_query').join(',') );
 
-            if( typeof this.get('orderby') != 'undefined' ) query.push( 'orderby=' + this.get('orderby') );
-            if( typeof this.get('order') != 'undefined' ) query.push( 'order=' + this.get('order') );
-            if( typeof this.get('posts_per_page') != 'undefined' ) query.push( 'posts_per_page=' + this.get('posts_per_page') );
+            if( typeof this.get('orderby') !== 'undefined' ) query.push( 'orderby=' + this.get('orderby') );
+            if( typeof this.get('order') !== 'undefined' ) query.push( 'order=' + this.get('order') );
+            if( typeof this.get('posts_per_page') !== 'undefined' ) query.push( 'posts_per_page=' + this.get('posts_per_page') );
+            if( typeof this.get('sticky') !== 'undefined' ) query.push( 'sticky=' + this.get('sticky') );
+            if( typeof this.get('additional') !== 'undefined' ) query.push( 'additional=' + this.get('additional') );
 
             return query.join('&');
         },
@@ -116,7 +124,9 @@ var soWidgetPostSelector = ( function ($, _) {
 
             if( params.hasOwnProperty('orderby') ) theQuery.orderby = params.orderby;
             if( params.hasOwnProperty('order') ) theQuery.order = params.order;
-            if( params.hasOwnProperty('posts_per_page') ) theQuery.posts_per_page = Number(params.posts_per_page);
+            if( params.hasOwnProperty('posts_per_page') ) theQuery.posts_per_page = params.posts_per_page;
+            if( params.hasOwnProperty('sticky') ) theQuery.sticky = params.sticky;
+            if( params.hasOwnProperty('additional') ) theQuery.additional = params.additional;
 
             theQuery.query = query;
             return theQuery;
@@ -125,10 +135,10 @@ var soWidgetPostSelector = ( function ($, _) {
 
         sync: function( method, model ){
 
-            if(method == 'create') {
+            if(method === 'create') {
                 var curVal = this.syncField.val();
                 var newVal = this.getQuery();
-                if(curVal != newVal) {
+                if(curVal !== newVal) {
                     this.syncField.val(newVal);
                     this.syncField.trigger('change');
                 }
@@ -166,12 +176,12 @@ var soWidgetPostSelector = ( function ($, _) {
 
             // Create the current posts summary view
             var postCollection = new PostCollection();
-            this.views['postSummary'] = new PostCollectionSummaryView( {
+            this.views.postSummary = new PostCollectionSummaryView( {
                 posts: postCollection,
                 el: this.el
             } );
-            this.views['postSummary'].builder = this;
-            this.views['postSummary'].posts.updateWithQuery( this.model.getQuery() );
+            this.views.postSummary.builder = this;
+            this.views.postSummary.posts.updateWithQuery( this.model.getQuery() );
 
             // Create the sub views
             this.addSubView( 'form' , new QueryForm({ el: this.el, model: this.model }) );
@@ -179,7 +189,7 @@ var soWidgetPostSelector = ( function ($, _) {
             this.addSubView( 'postsSelect' , new PostSelectView({ el: this.el, model: this.model }) );
 
             // When the button is pressed in the form subview, close this
-            this.views['form'].bind('buttonHandler', this.close, this);
+            this.views.form.bind('buttonHandler', this.close, this);
         },
 
         // Change the model we're using
@@ -191,7 +201,7 @@ var soWidgetPostSelector = ( function ($, _) {
         // Render the builder and the currently active sub view
         render: function() {
             // Create the modal
-            this.$el.html(sowPostsSelectorTpl.modal);
+            this.$el.html( sowPostsSelectorTpl.modal );
 
             // Add the button from the sub view
             this.$el.find('.media-toolbar-primary .button').html( this.views[this.activeView].buttonText );
@@ -200,8 +210,8 @@ var soWidgetPostSelector = ( function ($, _) {
             this.rendered = true;
 
             // Render the supporting views
-            if(this.activeView != 'postsSelect') {
-                this.views['postSummary'].render();
+            if(this.activeView !== 'postsSelect') {
+                this.views.postSummary.render();
             }
 
             // Render the active view
@@ -240,7 +250,7 @@ var soWidgetPostSelector = ( function ($, _) {
             }
 
             if( !this.attached ) {
-                this.$el.appendTo('#wpwrap');
+                this.$el.appendTo('body');
                 this.attached = true;
             }
 
@@ -250,7 +260,9 @@ var soWidgetPostSelector = ( function ($, _) {
         // Show the builder
         show: function(){
             this.attach();
-            if( !this.$el.is(':visible') ) this.$el.show();
+            if( !this.$el.is(':visible') ) {
+                this.$el.show();
+            }
         },
 
         // Escape this
@@ -272,7 +284,9 @@ var soWidgetPostSelector = ( function ($, _) {
             this.views[name] = view;
             view.builder = this;
 
-            if(this.activeView == null) this.activeView = name;
+            if(this.activeView === null) {
+                this.activeView = name;
+            }
         },
 
         // Set the active view
@@ -305,32 +319,40 @@ var soWidgetPostSelector = ( function ($, _) {
 
             // The post type field
             this.form.append('<div class="query-builder-form-field">' + sowPostsSelectorTpl.fields.post_type + '</div>');
-            if( this.model.get('post_type') != null ) this.form.find('select[name="post_type"]').val( this.model.get('post_type'));
+            if( typeof this.model.get('post_type') !== 'undefined' ) this.form.find('select[name="post_type"]').val( this.model.get('post_type'));
 
             // The post__in field
             this.form.append('<div class="query-builder-form-field">' + sowPostsSelectorTpl.fields.post__in + '</div>');
-            if( this.model.get('post__in') != null ) this.form.find('input[name="post__in"]').val( this.model.get('post__in').join(',') );
+            if( typeof this.model.get('post__in') !== 'undefined' ) this.form.find('input[name="post__in"]').val( this.model.get('post__in').join(',') );
 
             // The taxonomy field
             this.form.append('<div class="query-builder-form-field ui-front">' + sowPostsSelectorTpl.fields.tax_query + '</div>');
-            if( this.model.get('tax_query') != null ) this.form.find('input[name="tax_query"]').val( this.model.get('tax_query'));
+            if( typeof this.model.get('tax_query') !== 'undefined' ) this.form.find('input[name="tax_query"]').val( this.model.get('tax_query'));
 
             // The order field
             this.form.append($('<div class="query-builder-form-field">' + sowPostsSelectorTpl.fields.orderby + '</div>').disableSelection());
-            if( this.model.get('orderby') != null ) this.form.find('select[name="orderby"]').val(this.model.get('orderby'));
-            if( this.model.get('order') != null ) this.form.find('input[name="order"]').val(this.model.get('order'));
+            if( typeof this.model.get('orderby') !== 'undefined' ) this.form.find('select[name="orderby"]').val(this.model.get('orderby'));
+            if( typeof this.model.get('order') !== 'undefined' ) this.form.find('input[name="order"]').val(this.model.get('order'));
 
             // The posts per page field
             this.form.append('<div class="query-builder-form-field">' + sowPostsSelectorTpl.fields.posts_per_page + '</div>');
-            if( this.model.get('posts_per_page') != null ) this.form.find('input[name="posts_per_page"]').val( this.model.get('posts_per_page'));
+            if( typeof this.model.get('posts_per_page') !== 'undefined' ) this.form.find('input[name="posts_per_page"]').val( this.model.get('posts_per_page'));
+
+            // The sticky posts field
+            this.form.append('<div class="query-builder-form-field">' + sowPostsSelectorTpl.fields.sticky + '</div>');
+            if( typeof this.model.get('sticky') !== 'undefined' ) this.form.find('select[name="sticky"]').val( this.model.get('sticky'));
+
+            // The additional query arguments field
+            this.form.append('<div class="query-builder-form-field">' + sowPostsSelectorTpl.fields.additional + '</div>');
+            if( typeof this.model.get('additional') !== 'undefined' ) this.form.find('input[name="additional"]').val( this.model.get('additional'));
 
 
-            var orderField =  this.form.find('input[name="order"]')
+            var orderField =  this.form.find('input[name="order"]');
             var orderButton = orderField.closest('.query-builder-form-field').find('.sow-order-button');
 
             // Reset the ordering button
             var resetOrderButton = function () {
-                if (orderField.val() == 'DESC') {
+                if (orderField.val() === 'DESC') {
                     orderButton.removeClass('sow-order-button-asc');
                     orderButton.addClass('sow-order-button-desc');
                 }
@@ -343,8 +365,12 @@ var soWidgetPostSelector = ( function ($, _) {
 
             orderButton.click(function(e){
                 e.preventDefault();
-                if(orderField.val() == 'DESC') orderField.val('ASC');
-                else orderField.val('DESC');
+                if(orderField.val() === 'DESC') {
+                    orderField.val('ASC');
+                }
+                else {
+                    orderField.val('DESC');
+                }
                 resetOrderButton();
                 thisView.updateModel();
                 return false;
@@ -367,9 +393,14 @@ var soWidgetPostSelector = ( function ($, _) {
             // Set up the autocomplete on the taxonomy query
             this.form.find('input[name="tax_query"]').autocomplete({
                 source: function (request, response) {
-                    $.getJSON(ajaxurl + "?action=sow_search_terms", {
-                        term: request.term.split(/,\s*/).pop()
-                    }, response);
+                    $.getJSON(
+                        sowPostsSelectorTpl.ajaxurl,
+                        {
+                            term: request.term.split(/,\s*/).pop(),
+                            action: 'sow_search_terms'
+                        },
+                        response
+                    );
                 },
                 search: function () {
                     // custom minLength
@@ -393,7 +424,7 @@ var soWidgetPostSelector = ( function ($, _) {
                     this.value = terms.join(", ");
 
                     // Update the model after we've addded a new term
-                    thisView.updateModel()
+                    thisView.updateModel();
                     return false;
                 }
             });
@@ -406,16 +437,16 @@ var soWidgetPostSelector = ( function ($, _) {
             this.model.set( 'post_type', this.$el.find('*[name="post_type"]').val() );
 
             // Add the posts in part to the mode
-            if(this.$el.find('*[name="post__in"]').val().trim() != '') {
-                this.model.set( 'post__in', this.$el.find('*[name="post__in"]').val().split(',').map(function(a){ return Number( a.trim() ) }) );
+            if(this.$el.find('*[name="post__in"]').val().trim() !== '') {
+                this.model.set( 'post__in', this.$el.find('*[name="post__in"]').val().split(',').map(function(a){ return Number( a.trim() ); }) );
             }
             else {
                 this.model.set( 'post__in', []);
             }
 
             // Build the taxonomy query
-            if(this.$el.find('*[name="tax_query"]').val().trim() != '') {
-                var tax_query = this.$el.find('*[name="tax_query"]').val().split(',').map(function(a){ return a.trim() });
+            if(this.$el.find('*[name="tax_query"]').val().trim() !== '') {
+                var tax_query = this.$el.find('*[name="tax_query"]').val().split(',').map(function(a){ return a.trim(); });
                 this.model.set( 'tax_query', _.compact(tax_query) );
             }
             else {
@@ -425,6 +456,8 @@ var soWidgetPostSelector = ( function ($, _) {
             this.model.set( 'orderby', this.$el.find('*[name="orderby"]').val() );
             this.model.set( 'order', this.$el.find('*[name="order"]').val() );
             this.model.set( 'posts_per_page', this.$el.find('*[name="posts_per_page"]').val() );
+            this.model.set( 'sticky', this.$el.find('*[name="sticky"]').val() );
+            this.model.set( 'additional', this.$el.find('*[name="additional"]').val() );
 
             this.model.set( 'query', this.model.getQuery() );
 
@@ -476,7 +509,7 @@ var soWidgetPostSelector = ( function ($, _) {
             var $c = this.$el.find('.query-builder-content').empty().append('<div class="sow-current-posts"></div>').find('.sow-current-posts');
 
             // Render all the posts
-            var $c = this.$el.find('.query-builder-content');
+            $c = this.$el.find('.query-builder-content');
             var template = this.template;
             this.posts.each(function(post){
                 $c.append(template(post.attributes));
@@ -507,6 +540,7 @@ var soWidgetPostSelector = ( function ($, _) {
 
         render: function(){
             var posts = this.model.get('post__in');
+            var postType = this.model.get('post_type');
 
             this.$el.find('.query-builder-content').empty().html(sowPostsSelectorTpl.selector);
 
@@ -522,8 +556,19 @@ var soWidgetPostSelector = ( function ($, _) {
 
             // Set up the autocomplete
             var v = this;
-            this.$el.find('.query-builder-content #sow-post-selector .sow-search-field').autocomplete({
-                source: ajaxurl + '?action=sow_search_posts',
+            var $searchInput = this.$el.find('.query-builder-content #sow-post-selector .sow-search-field');
+
+            $searchInput.autocomplete({
+                source: function(request, response) {
+                    request.type = postType;
+                    request.action = 'sow_search_posts';
+                    $.get(
+                        sowPostsSelectorTpl.ajaxurl,
+                        request,
+                        response
+                    );
+                },
+                minLength: 0,
                 select: function( event, ui ) {
                     event.preventDefault();
                     $(this).val('');
@@ -534,9 +579,13 @@ var soWidgetPostSelector = ( function ($, _) {
                     return false;
                 }
             });
+            $searchInput.focusin(
+                function() {
+                    $searchInput.autocomplete("search", $searchInput.val());
+                }
+            )
 
             // Handle clicking on the remove buttons
-            var v = this;
             this.$el.find('.query-builder-content').on('click', '.sow-remove', function(e){
                 e.preventDefault();
                 var $$ = $(this);
@@ -550,11 +599,13 @@ var soWidgetPostSelector = ( function ($, _) {
         },
 
         addPosts: function(posts) {
-            if(typeof posts == 'undefined' || _.isEmpty(posts)) return;
+            if(typeof posts === 'undefined' || _.isEmpty(posts)) {
+                return;
+            }
 
             var getPosts = [];
             for(var i = 0; i < posts.length; i++) {
-                if(typeof this.postCache[ posts[i] ] == 'undefined') {
+                if(typeof this.postCache[ posts[i] ] === 'undefined') {
                     getPosts.push(posts[i]);
                 }
             }
@@ -563,7 +614,7 @@ var soWidgetPostSelector = ( function ($, _) {
             var v = this;
             if(!_.isEmpty(getPosts)) {
                 $.post(
-                    ajaxurl,
+                    sowPostsSelectorTpl.ajaxurl,
                     {
                         action: 'sow_get_posts',
                         query : 'post_type=_all&posts_per_page=-1&post__in=' + getPosts.join(',')
@@ -571,13 +622,14 @@ var soWidgetPostSelector = ( function ($, _) {
                     function(data){
 
                         console.log(data);
-                        if(typeof data.posts != 'undefined') {
+                        if(typeof data.posts !== 'undefined') {
 
                             _.each(data.posts, function(post, i){
                                 v.postCache[post.id] = {
                                     id : post.id,
                                     title : post.title,
-                                    thumbnail : post.thumbnail
+                                    thumbnail : post.thumbnail,
+                                    editUrl: post.editUrl
                                 };
                             });
 
@@ -589,13 +641,14 @@ var soWidgetPostSelector = ( function ($, _) {
             }
 
             // Add placeholder posts
+            var postItem;
             for(var i = 0; i < posts.length; i++) {
-                if( typeof this.postCache[posts[i]] == 'undefined' ) {
+                if( typeof this.postCache[posts[i]] === 'undefined' ) {
                     // Create a temporary post
-                    var postItem = $(this.postTemplate( {id:posts[i], title: '', thumbnail: ''} )).addClass('sow-post-loading');
+                    postItem = $(this.postTemplate( {id:posts[i], title: '', thumbnail: '', editUrl: '#'} )).addClass('sow-post-loading');
                 }
                 else {
-                    var postItem = $(this.postTemplate( this.postCache[posts[i]] ));
+                    postItem = $(this.postTemplate( this.postCache[posts[i]] ));
                 }
 
                 postItem.appendTo(this.sortable);
@@ -612,7 +665,7 @@ var soWidgetPostSelector = ( function ($, _) {
                 var $$ = $(this);
                 var id = $$.data('id');
 
-                if(typeof v.postCache[id] != 'undefined') {
+                if(typeof v.postCache[id] !== 'undefined') {
                     $$.removeClass('sow-post-loading');
                     var postItem = $(v.postTemplate( v.postCache[ id ] ));
 
@@ -647,8 +700,12 @@ var soWidgetPostSelector = ( function ($, _) {
     jQuery( function($){
         $('body').on('click', '.sow-select-posts', function(e){
             e.preventDefault();
-            builder.model.setSyncField( $(this).closest( '.siteorigin-widget-field' ).find( '.siteorigin-widget-input' ) );
+            var $postSelectorButton = $(this);
+            builder.model.setSyncField( $postSelectorButton.siblings( '.siteorigin-widget-input' ) );
             builder.model.sync('update');
+            builder.views.postSummary.posts.on("reset", function (postsCollection) {
+                $postSelectorButton.find(".sow-current-count").text(postsCollection.foundPosts);
+            });
             builder.open();
         });
     } );
