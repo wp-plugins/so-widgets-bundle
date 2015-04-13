@@ -37,6 +37,9 @@ Once you enable a widget, you'll be able to use it anywhere standard widgets are
 
 == Changelog ==
 
+= 1.2.1 =
+* Hotfix: Fixed fatal error that came up with old versions of WordPress.
+
 = 1.2 =
 * Added headline widget.
 * All scripts and styles loaded in header instead of lazy loading.
