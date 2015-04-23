@@ -24,10 +24,17 @@ The collection is growing, but here’s what we have so far.
 * Price Table Widget that’ll help you sell more.
 * Post Carousel Widget that displays your posts as a carousel.
 * Features Widget that lets you display a set of site or service features.
+* Video Widget to get your videos out there.
+* Headline Widget to get you noticed.
+* Social Links Widget to show you're active.
 
 Once you enable a widget, you'll be able to use it anywhere standard widgets are used. You can manage your widgets by going to Plugins > SiteOrigin Widgets in your WordPress admin.
 
-[Documentation](https://siteorigin.com/widgets-bundle/) is available on SiteOrigin. Read our [Widget Bundle developer documentation](https://siteorigin.com/docs/widgets-bundle/) if you'd like to develop with the Widget Bundle.
+[Documentation](https://siteorigin.com/widgets-bundle/) is available on SiteOrigin.
+
+= Create Custom Widgets =
+
+The SiteOrigin Widgets Bundle is the perfect platform to build widgets for your theme or plugin. Read more on our [developer docs](https://siteorigin.com/docs/widgets-bundle/).
 
 == Screenshots ==
 
@@ -37,8 +44,16 @@ Once you enable a widget, you'll be able to use it anywhere standard widgets are
 
 == Changelog ==
 
+= 1.2.2 =
+* Added video widget with support for self/external videos.
+* New activate/deactivate widgets interface.
+* Headline widget CSS fixes.
+* Dev Feature: Error checking for widget field type.
+* Dev Feature: Added state emitters.
+* Dev Feature: Additional hooks and filters.
+
 = 1.2.1 =
-* Hotfix: Fixed fatal error that came up with old versions of WordPress.
+* Removed is_customizer_preview - only available in newer versions of WordPress.
 
 = 1.2 =
 * Added headline widget.
