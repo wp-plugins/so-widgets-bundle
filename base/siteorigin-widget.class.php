@@ -37,6 +37,8 @@ abstract class SiteOrigin_Widget extends WP_Widget {
 	 * @param array $widget_options Optional Normal WP_Widget widget options and a few extras.
 	 *   - help: A URL which, if present, causes a help link to be displayed on the Edit Widget modal.
 	 *   - instance_storage: Whether or not to temporarily store instances of this widget.
+	 *   - has_preview: Whether or not this widget has a preview to display. If false, the form does not output a
+	 *                  'Preview' button.
 	 * @param array $control_options Optional Normal WP_Widget control options.
 	 * @param array $form_options Optional An array describing the form fields used to configure SiteOrigin widgets.
 	 * @param mixed $base_folder Optional
@@ -48,9 +50,14 @@ abstract class SiteOrigin_Widget extends WP_Widget {
 		$this->repeater_html = array();
 		$this->field_ids = array();
 
+		$widget_options = wp_parse_args( $widget_options, array(
+			'has_preview' => true,
+		) );
+
 		$control_options = wp_parse_args($widget_options, array(
 			'width' => 600,
 		) );
+
 		parent::WP_Widget($id, $name, $widget_options, $control_options);
 		$this->initialize();
 
@@ -297,7 +304,7 @@ abstract class SiteOrigin_Widget extends WP_Widget {
 			<p><strong><?php _e('You will only need to do this once.', 'siteorigin-widgets') ?></strong></p>
 		</div>
 
-		<?php if( ! $this->is_customize_preview() ) : ?>
+		<?php if( $this->widget_options['has_preview'] && ! $this->is_customize_preview() ) : ?>
 			<div class="siteorigin-widget-preview" style="display: none">
 				<a href="#" class="siteorigin-widget-preview-button button-secondary"><?php _e('Preview', 'siteorigin-widgets') ?></a>
 			</div>
@@ -1183,11 +1190,6 @@ abstract class SiteOrigin_Widget extends WP_Widget {
 					);
 				}
 				?></div><?php
-				break;
-
-			case 'bucket' :
-				// A bucket select and explore field
-				?><input type="text" name="<?php echo $this->so_get_field_name($name, $repeater) ?>" id="<?php echo $field_id ?>" value="<?php echo esc_attr($value) ?>" class="widefat siteorigin-widget-input" /><?php
 				break;
 
 			default:
