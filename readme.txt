@@ -44,6 +44,10 @@ The SiteOrigin Widgets Bundle is the perfect platform to build widgets for your 
 
 == Changelog ==
 
+= 1.2.4 =
+* Fixed reference to siteorigin_widgets_is_google_webfont.
+* Fixed CSS URL.
+
 = 1.2.3 =
 * Fixed Javascript issue with Map widget in customizer.
 * Added meta box manager.
