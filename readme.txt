@@ -2,7 +2,7 @@
 Tags: bundle, widget, button, slider, image, carousel, price table
 Requires at least: 3.9
 Tested up to: 4.2
-Stable tag: 1.2.4
+Stable tag: 1.3
 License: GPLv3 or later
 Contributors: gpriday, braam-genis
 
