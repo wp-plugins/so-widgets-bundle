@@ -11,7 +11,7 @@ License URI: https://www.gnu.org/licenses/gpl-3.0.txt
 */
 
 define('SOW_BUNDLE_VERSION', '1.3');
-define('SOW_BUNDLE_JS_SUFFIX', '');
+define('SOW_BUNDLE_JS_SUFFIX', '.min');
 define('SOW_BUNDLE_BASE_FILE', __FILE__);
 
 if( !function_exists('siteorigin_widget_get_plugin_path') ) {
